@@ -98,7 +98,7 @@ def insert_lexisnexis(pathwithlnfiles,recursive):
                                 elif line.lstrip().startswith("AD/Algemeen Dagblad") or line.lstrip().startswith("De Telegraaf") or line.lstrip().startswith("Trouw") or line.lstrip().startswith("de Volkskrant") or line.lstrip().startswith("NRC Handelsblad") or line.lstrip().startswith("Metro") or line.lstrip().startswith("Spits"):
                                         pass
 				else:
-					 tekst[artikel]=tekst[artikel]+line
+					 tekst[artikel]=tekst[artikel]+line.rstrip("\n")
 	print "Done!",artikel,"articles added."
 
 	if not len(journal) == len(loaddate) == len(section) == len(language) == len(byline) == len(length) == len(tekst):
