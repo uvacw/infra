@@ -28,38 +28,13 @@ config = ConfigParser.RawConfigParser()
 config.read('config.conf')
 
 nlwoordenbestand=config.get('files','dictionary')
-#naambestanden=config.get('files','ownfileswithnames')
-ownreplacements=[config.get('files','ownfilesreplacements')]   # er zouden ook meer bestanden in die lijst kunnen staan, functie ontbreekt nu 
-ownreplacements_lastnames=[config.get('files','ownfilesreplacementspeople')] # er zouden ook meer bestanden in die lijst kunnen staan, functie ontbreekt nu 
+
+ownreplacements=[config.get('files','ownreplacements')] 
+
 
 outputbestand=config.get('files','replacementlist')
 outputbestand2=config.get('files','replacementlistlastnames')
-
-# bestanden specificeren
-# bestand met (alle) Nederlandse woorden, één per regel
-# nlwoordenbestand="/Users/damian/Dropbox/uva/onderzoeksprojecten_lopend/2014-damianjeroen/3. Nieuwprogramma/input/OpenTaal-210G-basis-gekeurd.txt"
-# bestanden met namen (voornaam achternaam, één per regel)
-#naambestanden=["/Users/damian/Dropbox/uva/onderzoeksprojecten_lopend/2014-damianjeroen/3. Nieuwprogramma/input/politici_voornaam_achternaam.txt"]
-# own tab-sperated files with two columns (first column original, second replacement)
-#ownreplacements=["/Users/damian/Dropbox/uva/onderzoeksprojecten_lopend/2014-damianjeroen/3. Nieuwprogramma/input/vervanglijstje.tab"]
-
-# own tab-sperated files with two columns (first column original, second replacement) - special for lastnames
-#ownreplacements_lastnames=["/Users/damian/Dropbox/uva/onderzoeksprojecten_lopend/2014-damianjeroen/3. Nieuwprogramma/input/vervanglijstje_speciaal_menselijke achternamen.tab"]
-
-
-
-# lijst met bedrijven 
-#lijstenmetbedrijven=["/Users/damian/Dropbox/uva/onderzoeksprojecten_lopend/2014-damianjeroen/3. Nieuwprogramma/input/lijst_bedrijven_500meestinvloedrijkinNL.txt","/Users/damian/Dropbox/uva/onderzoeksprojecten_lopend/2014-damianjeroen/3. Nieuwprogramma/input/lijst_bedrijven_multinationals_top2000.txt"]
-
-
-# Waar de output opslaan?
-#outputbestand="/Users/damian/Dropbox/uva/onderzoeksprojecten_lopend/2014-damianjeroen/3. Nieuwprogramma/output/vervanglijstje.json"
-
-# een nog een outputbestand, nu voor achternamen (afzonderlijk)
-#outputbestand2="/Users/damian/Dropbox/uva/onderzoeksprojecten_lopend/2014-damianjeroen/3. Nieuwprogramma/output/vervanglijstje_achternamen.json"
-
-
-
+outputbestand3=config.get('files','replacementlistotherindicator')
 
 
 
@@ -72,42 +47,12 @@ def replacespaces(listwithwords):
 	return repldict
 	
 	
-def replacenames(naambestanden):
-	repldict={}
-	names=[]
-	for fname in naambestanden:
-		naamtemp=[line.strip() for line in open(fname,mode="r",encoding="utf-8")]
-		names+=naamtemp
-	for naam in names:
-		# first, just the same as with space removal
-		repldict[naam]=naam.replace(" ","_")
-		# BUT we are also going to assume that there is just one person with the same last name (TRICKY, I KNOW, HAS TO BE IMPROVED):
-		naamsplit=naam.split()
-		if naamsplit[-2].lower() not in ["van", "de","den","der"]:
-			# TODO:
-			# HIER WORDT "De Vries" VERVANGEN DOOR "Henk_de_Vries"
-			# DIT GAAT NATUURLIJK NIET ALTIJD OP, ZEKER MET VAAK VOORKOMENDE NAMEN
-			# OPLOSSING: IN HETZELFDE ARTIKEL OPZOEKEN OVER WELKE DE VRIES HET GAAT
-			# IDEE: EERSTE KEER ZAL IE WEL MET ZN VOLLEDIGE NAAM GENOEMD WORDEN
-			repldict[naamsplit[-1]]=naam.replace(" ","_")
-		else:
-			repldict[" ".join(naamsplit[-2:])]=naam.replace(" ","_")
-	return repldict
 
-def replacebedrijf(lijstenmetbedrijven):
-	repldict={}
-	names=[]
-	for fname in lijstenmetbedrijven:
-		naamtemp=[line.strip() for line in open(fname,mode="r",encoding="utf-8")]
-		names+=naamtemp
-	for naam in names:
-		# first, just the same as with space removal, ook McDonald's --> McDonalds
-		repldict[naam]=naam.replace(" ","_").replace("'","")
-		# evtl later iets toevoegen om "Holding", "Group" etc te vervangen (?) 
-	return repldict
-
-
-def replaceown(inputfiles):
+def replaceown(inputfiles,col1,col2):
+	'''
+	col1 = column with the original expression
+	col2 = column with the replacement
+	'''
 	repldict={}
 	for fname in inputfiles:
 		i=0
@@ -116,10 +61,34 @@ def replaceown(inputfiles):
 				i+=1
 				bothcolumns=line.strip().split("\t")
 				#print bothcolumns
-				repldict[bothcolumns[0]]=bothcolumns[1]
+				# alleen doorgaan als de kolom bestaat
+				if len(bothcolumns)-1>=max(col1,col2):
+					repldict[bothcolumns[col1]]=bothcolumns[col2]
 		print i,"expressions from",fname,"have been added to the replacement list"
 	return repldict
 	
+	
+def replaceownindien(inputfiles,col1,col2,col3):
+	'''
+	col1 = column with the original expression
+	col2 = column with the replacement
+	col3= indien DIT genoemd wordt in het artikel
+	'''
+	repldict={}
+	for fname in inputfiles:
+		i=0
+		with open(fname,mode="r",encoding="utf-8") as fi:
+			for line in fi:
+				i+=1
+				bothcolumns=line.strip().split("\t")
+				#print bothcolumns
+				# alleen doorgaan als de kolom bestaat
+				if len(bothcolumns)-1>=max(col1,col2):
+					repldict[bothcolumns[col3]]=[bothcolumns[col1],bothcolumns[col2]]
+		print i,"expressions from",fname,"have been added to the replacement list"
+	return repldict
+
+
 
 def main():
 	complrepldict={}
@@ -129,12 +98,9 @@ def main():
 	complrepldict.update(replacespaces(alldutchwords))
 
 	# STAP 2: EIGEN VERVANGLIJSTJE (namen, bedrijven, ...), zelf aangemaakt tab-seperated file
-	complrepldict.update(replaceown(ownreplacements))
+	complrepldict.update(replaceown(ownreplacements,0,1))
 	
 
-	# ANDERE OPTIES:
-	# complrepldict.update(replacenames(naambestanden))
-	# complrepldict.update(replacebedrijf(lijstenmetbedrijven))
 
 	with open(outputbestand,mode="w",encoding="utf-8") as fo:
 		fo.write(unicode(json.dumps(complrepldict,ensure_ascii=False)))
@@ -142,24 +108,31 @@ def main():
 	print "Finished writing",outputbestand
 	print "YOU'RE READY WITH THE GENERAL REPLACEMENT LIST!\n"
 	
-
-
         
         # STAP 2b: WE DOEN HET NOG EEN KEER, WANT WE WILLEN NOG EEN VERVANGLIJSTJE DAT WE ALLEEN GAAN TOEPASSEN ALS NAMEN AL EEN KEER ZIJN GENOEMD; 
         
         complrepldict2={}
-        complrepldict2.update(replaceown(ownreplacements_lastnames))
+        complrepldict2.update(replaceown(ownreplacements,2,1))
 	
-
-        # ANDERE OPTIES:
-        # complrepldict.update(replacenames(naambestanden))
-	# complrepldict.update(replacebedrijf(lijstenmetbedrijven))
-
 	with open(outputbestand2,mode="w",encoding="utf-8") as fo:
 		fo.write(unicode(json.dumps(complrepldict2,ensure_ascii=False)))
 	
 	print "Finished writing",outputbestand2
 	print "YOU'RE READY WITH THE REPLACEMENT LIST FOR LAST NAMES/FULL NAMES!\n"
+
+
+
+        # STAP 2c: WE DOEN HET NOG EEN KEER, VOOR VERVANINGEN INDIEN ANDER WOORD ERGENS IN HET ARTIKEL WORT GENOEMD
+                
+        complrepldict3={}
+        complrepldict3.update(replaceownindien(ownreplacements,2,1,3))
+	
+	with open(outputbestand3,mode="w",encoding="utf-8") as fo:
+		fo.write(unicode(json.dumps(complrepldict3,ensure_ascii=False)))
+	
+	print "Finished writing",outputbestand3
+	print "YOU'RE READY WITH THE REPLACEMENT LIST FOR OTHER INDICATORS!\n"
+
 
 
 

@@ -20,6 +20,7 @@ config.read('config.conf')
 replacementlistfile=config.get('files','replacementlist')
 stopwordsfile=config.get('files','stopwords')
 replacementlistlastnamesfile=config.get('files','replacementlistlastnames')
+replacementlistsindienfile=config.get('files','replacementlistotherindicator')
 databasename=config.get('mongodb','databasename')
 collectionname=config.get('mongodb','collectionname')
 collectionnamecleaned=config.get('mongodb','collectionnamecleaned')
@@ -71,7 +72,7 @@ def insert_lexisnexis(pathwithlnfiles,recursive):
 			for line in f:
 				i=i+1
 				# print "Regel",i,": ", line
-				line=line.replace("\r","")
+				line=line.replace("\r"," ")
 				if line=="\n":
 					continue
 				matchObj=re.match(r"\s+(\d+) of (\d+) DOCUMENTS",line)
@@ -98,7 +99,7 @@ def insert_lexisnexis(pathwithlnfiles,recursive):
                                 elif line.lstrip().startswith("AD/Algemeen Dagblad") or line.lstrip().startswith("De Telegraaf") or line.lstrip().startswith("Trouw") or line.lstrip().startswith("de Volkskrant") or line.lstrip().startswith("NRC Handelsblad") or line.lstrip().startswith("Metro") or line.lstrip().startswith("Spits"):
                                         pass
 				else:
-					 tekst[artikel]=tekst[artikel]+line.rstrip("\n")
+					 tekst[artikel]=tekst[artikel]+" "+line.rstrip("\n")
 	print "Done!",artikel,"articles added."
 
 	if not len(journal) == len(loaddate) == len(section) == len(language) == len(byline) == len(length) == len(tekst):
@@ -231,6 +232,13 @@ def clean_database():
         #pattern2 = re.compile("\\b|\\b".join(repldictpersons.keys()))
         # pattern2_fullname = re.compile("\\b|\\b".join(repldictpersons.values()))
 
+
+        # ... and with the indien vvd genoemd, dan ... bestand
+        with open(replacementlistsindienfile,mode="r",encoding="utf-8") as fi:
+                repldictindien=json.load(fi)
+
+
+
         # processing articles one by one
         allarticles=collection.find()
         aantal=collection.count()
@@ -263,7 +271,13 @@ def clean_database():
                            # fix 20141029: geen rekening gehouden met word boudaries, vandaar pietmoerlandmoerland
                            thisart=re.sub("\\b"+k+"\\b",v,thisart)
                            #print "Replaced",k,"by",v
-                
+                 # checken
+                for k in repldictindien:
+                        #print "check",v
+                        if k in thisart:
+                           thisart=re.sub("\\b"+repldictindien[k][0]+"\\b",repldictindien[k][1],thisart)
+                           print "Replaced",repldictindien[k][0],"by",repldictindien[k][1],"because",k,"was mentioned"
+                           #print "Replaced",k,"by",v                
                 '''
                 # functie 2: lowercase
                 thisart=thisart.lower()
@@ -291,6 +305,7 @@ def clean_database():
                 # functies 2/3/(4): lowercase, leestekens weg, stopwords en cijfers eruit, maar GEEN stemming
                 
                 thisart=remove_punctuation(thisart.lower())
+                #print thisart
                 #print thisart
                 stops=[line.strip().lower() for line in open(stopwordsfile,mode="r",encoding="utf-8")]
                 tas=thisart.split()
