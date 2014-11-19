@@ -1,0 +1,21 @@
+# this is a config file for HET VETTE PROGRAMMA BLABLA
+# BLA BLA
+
+[mongodb]
+url=mongodb://localhost:27017/
+databasename=articles
+collectionname=WHATEVERYOULIKE
+collectionnamecleaned=WHATEVERYOULIKE
+
+[files]
+replacementlist=/Users/path/to/your/replacementlist.json
+replacementlistlastnames=/Users/path/to/your/replacementlist_lastnamesjson
+dictionary=/Users/path/to/your/dictionarywithwords.txt
+networkoutput=/Users/path/to/your/desired_output_network.gdf
+loglikelihoodoutput=/Users/path/to/your/desired_output_ll.csv
+stopwords=/Users/path/to/your/listwithstopwords.txt
+cosdistoutput=/Users/path/to/your/cosinedistancematrix.csv
+compscoreoutput=/Users/path/to/your/datasetwithcomponentscores.csv
+ownfileswithnames=/Users/path/to/your/politicians_firstname_lastname.txt
+ownfilesreplacements=/Users/path/to/your/tabfilewithreplacements1.tab
+ownfilesreplacementspeople=/Users/path/to/your/vervanglijstje_speciaal_menselijke achternamen.tab
