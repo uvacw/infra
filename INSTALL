@@ -1,0 +1,34 @@
+How to install INFRA
+
+This document describes what software you need to install in order to run INFRA from source code. The steps below assume you have a Mac (or Linux), but the procedure should be roughly similar for Windows users.
+
+
+(1)Install MongoDB
+
+INFRA stores all data in a so-called NoSQL-database. The database it uses is called MongoDB and can be downloaded for free. You can find instructions on http://www.mongodb.org, but there are also various tutorials available, including videos. Google and YouTube will help you further.
+
+Make sure MongoDB is not only installed, but actually running!
+
+
+(2) Install Python and/or neccessary Python modules
+
+INFRA is written in Python, a programming language often used for text analysis. You need Python itself and some modules that extend Python's functionality. On MacOS, Python is already pre-installed. If you still need Python, get it from http://python.org. Make sure that you install Python 2, not Python 3 (which is a different language).
+
+The easiest way to install the needed modules is using pip. You can install pip from the command line with
+sudo easy_install pip
+Then, you can install the needed modules with 
+
+sudo pip install pymongo
+sudo pip install nltk
+sudo pip install gensim
+sudo pip install scikit-learn
+
+The latter depends on numpy and scipy, but on a Mac, they should be preinstalled already.
+
+
+(3) Configure INFRA
+
+Download INFRA and put it in a directory of you own choice (e.g. /Users/john/infra).
+Go to the INFRA folder. Copy the file config.conf.example to config.conf and open it with a text editor of choice. Change the paths to the desired locations and save it. You can also change the database name to something you like.
+
+(4) You're ready to go!
