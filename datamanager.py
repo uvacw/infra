@@ -10,9 +10,7 @@ from os import listdir, walk
 from os.path import isfile, join, splitext
 import ConfigParser
 import argparse
-from nltk.stem import SnowballStemmer
-from nltk.corpus import stopwords
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 # read config file and set up MongoDB
 config = ConfigParser.RawConfigParser()
@@ -194,53 +192,23 @@ def adhocclean(bestand):
 
 
 def clean_database():
-    '''
-        TODO
-        ERVOOR ZORGEN DAT JE DE FUNCTIES (1) VERVANGEN (2) LOWERCASE (3) LEESTEKENS (4) STEMMING/STOPWORD REMOVAL AFZONDERLIJK KAN OPROEPEN. VIA ARGPARSE BIJVOORBEELD OF CONFIG.CONF
-        NIET ALLEEN STOPWOORDEN, MAAR OOK CIJFERS ERUIT
-
-  
-        NU WORDT EERST VERVANGEN, DAARNA LOWERCASE GEDAAN. CHECKEN OF WE DIT WILLEN BLIJVEN DOEN. VOOR: NAUWKEURIGER. TEGEN: Van der Laan WORDT NIET GEVONDEN DOOR van der Laan. MAAR DAT KUNNEN WE OOK APART OPLOSSEN (GEDAAN!)
-      
-        '''
-
-    # make sure that there is no old cleaned collection
+    # initialize new database for cleaned collection
     c = Connection()
     c[databasename].drop_collection(collectionnamecleaned)
 
-
-    # get info on what has to be replaced
+    # load replacement lists
+    # replacement list 1: always replace
     with open(replacementlistfile, mode="r", encoding="utf-8") as fi:
-        repldict = json.load(fi)
-    # spaties etc escapen voor de REGEXPs   <-- nee, we veronderstellen nu dat t vervanglijstje uit geldige regexp's bestaat
-    # repldict = dict((re.escape(k), v) for k, v in repldict.iteritems())
-
-    # print repldict.keys()
-    # pattern = re.compile("|".join(repldict.keys()))
-    # we want whole words only, therefore we use the following regexp adding the word boundries \b:
-    # niet meer nodig ivm andere strategie (RegEXP in vervanglijstje)
-    # pattern = re.compile("\\b|\\b".join(repldict.keys()))
-
+        repldict = json.load(fi, object_pairs_hook=OrderedDict)
     replpatterns = set(re.compile("\\b" + k + "\\b") for k in repldict)
-
-
-
-
-    # hetzelfde nog een keer voor achternamen
+    # replacement list 2: replace if already replaced according to list 1
     with open(replacementlistlastnamesfile, mode="r", encoding="utf-8") as fi:
-        repldictpersons = json.load(fi)
-    #repldictpersons = dict((re.escape(k), v) for k, v in repldictpersons.iteritems())
-    #pattern2 = re.compile("\\b|\\b".join(repldictpersons.keys()))
-    # pattern2_fullname = re.compile("\\b|\\b".join(repldictpersons.values()))
-
-
-    # ... and with the indien vvd genoemd, dan ... bestand
+        repldictpersons = json.load(fi, object_pairs_hook=OrderedDict)
+    # replacement list 3: replace only if another expression is mentioned
     with open(replacementlistsindienfile, mode="r", encoding="utf-8") as fi:
-        repldictindien = json.load(fi)
+        repldictindien = json.load(fi, object_pairs_hook=OrderedDict)
 
 
-
-    # processing articles one by one
     allarticles = collection.find()
     aantal = collection.count()
     i = 0
@@ -249,14 +217,6 @@ def clean_database():
         print "\r", i, "/", aantal, " or ", int(i / aantal * 100), "%",
         sys.stdout.flush()
         thisart = art["text"].replace("\n", " ")
-        #print thisart
-        # functie 1: vervangen nav vervanglijstke
-        #thisart=pattern.sub(lambda m: repldict[re.escape(m.group(0))], thisart)
-        #thisart=pattern.sub(repldict[m.group(0)], thisart)
-        # werkt niet want match is niet identiek aan key (match kan "ABN Amro" zijn, maar key is "ABN.Amro")
-        # nieuwe methode:
-        #for k in repldict :
-        #    thisart=re.sub("\\b"+k+"\\b",repldict[k],thisart)
         numbsub = 0
         for pat in replpatterns:
             subst = pat.subn(repldict[pat.pattern[2:-2]], thisart)  #[2:-2] to strip the \b
@@ -268,24 +228,16 @@ def clean_database():
             for k, v in repldictpersons.iteritems():
                 #print "check",v
                 if v in thisart:
-                    #thisart=thisart.replace(k,v)
-                    # fix 20141029: geen rekening gehouden met word boudaries, vandaar pietmoerlandmoerland
                     thisart = re.sub("\\b" + k + "\\b", v, thisart)
                 #print "Replaced",k,"by",v
-                # checken
         for k in repldictindien:
             #print "check",v
             if k in thisart:
                 thisart = re.sub("\\b" + repldictindien[k][0] + "\\b", repldictindien[k][1], thisart)
                 print "Replaced", repldictindien[k][0], "by", repldictindien[k][1], "because", k, "was mentioned"
-            #print "Replaced",k,"by",v
 
-
-        # functies 2/3/(4): lowercase, leestekens weg, stopwords en cijfers eruit, maar GEEN stemming
 
         thisart = remove_punctuation(thisart.lower())
-        #print thisart
-        #print thisart
         stops = [line.strip().lower() for line in open(stopwordsfile, mode="r", encoding="utf-8")]
         tas = thisart.split()
         thisart = ""
@@ -295,10 +247,6 @@ def clean_database():
         # replace original text with  modified text and put the whole item in the cleaned collection
         art["text"] = thisart
         article_id = collectioncleaned.insert(art)
-
-    #if i > 10:
-    #        print "we stoppen ff voor het gemak na 11 artikelen"
-    #        break
 
 
 def main():

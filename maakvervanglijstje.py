@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from io import open
+from collections import OrderedDict
 import json
 import ConfigParser
 
@@ -35,7 +36,7 @@ def replaceown(inputfiles,col1,col2):
     col1 = column with the original expression
     col2 = column with the replacement
     '''
-    repldict={}
+    repldict=OrderedDict()
     for fname in inputfiles:
         i=0
         with open(fname,mode="r",encoding="utf-8") as fi:
@@ -56,7 +57,7 @@ def replaceownindien(inputfiles,col1,col2,col3):
     col2 = column with the replacement
     col3= indien DIT genoemd wordt in het artikel
     '''
-    repldict={}
+    repldict=OrderedDict()
     for fname in inputfiles:
         i=0
         with open(fname,mode="r",encoding="utf-8") as fi:
@@ -73,7 +74,7 @@ def replaceownindien(inputfiles,col1,col2,col3):
 
 
 def main():
-    complrepldict={}
+    complrepldict=OrderedDict()
     # STEP 1.1: add all multi-word expressions from a dictionary of the language in question ('s ochtends --> 's_ochtends)
     alldutchwords=[line.strip() for line in open(nlwoordenbestand,mode="r",encoding="utf-8")]
     complrepldict.update(replacespaces(alldutchwords))
@@ -88,7 +89,7 @@ def main():
     # STEP 2.1: Add rules that only have to be replaced if already one replacement according to rule above has taken
     # place. Example: Jan Smit is replaced by jan_smit (1.2), now, also subsequent mentions of Smit (without Jan)
     # should be replaced by jan_smit
-    complrepldict2={}
+    complrepldict2=OrderedDict()
     complrepldict2.update(replaceown(ownreplacements,2,1))
     # STEP 2.2: save output to second-mention-output file
     with open(outputbestand2,mode="w",encoding="utf-8") as fo:
@@ -98,7 +99,7 @@ def main():
 
 
     # STEP 3.1: Add rules for replacements that only have to take place if some other expression occurs in the article
-    complrepldict3={}
+    complrepldict3=OrderedDict()
     complrepldict3.update(replaceownindien(ownreplacements,2,1,3))
     
     with open(outputbestand3,mode="w",encoding="utf-8") as fo:
