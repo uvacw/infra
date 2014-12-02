@@ -1,4 +1,9 @@
-TODO amadantk
+TO DO INFRA
+
+
+Algemeen
+========
+- branding/overall naar INFRA verwijzen, licentie printen etc
 
 
 
@@ -7,6 +12,9 @@ analysis.py
 - multiple all=collectioncleaned.find(subset,{"text": 1, "_id":0}) vervangen door een globale opvraagroutine
 - drempelwaarde voor zoeken toevoegen: woord moet vaker dan x keer voorkomen. 
 - bezitsform zelfstandige naamwoorden: Apples moet Apple worden
+
+- k-means clustering inbouwen:
+  http://scikit-learn.org/stable/auto_examples/document_clustering.html#example-document-clustering-py
 - tfidf routine inbouwen bijvoorbeeld op basis hiervan:
 
 
