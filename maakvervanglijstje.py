@@ -5,6 +5,7 @@ from io import open
 from collections import OrderedDict
 import json
 import ConfigParser
+import sys
 
 
 config = ConfigParser.RawConfigParser()
@@ -42,6 +43,8 @@ def replaceown(inputfiles,col1,col2):
         with open(fname,mode="r",encoding="utf-8") as fi:
             for line in fi:
                 i+=1
+                print "\r",fname,": line",i,
+                sys.stdout.flush()
                 bothcolumns=line.strip().split("\t")
                 #print bothcolumns
                 # alleen doorgaan als de kolom bestaat
@@ -63,6 +66,8 @@ def replaceownindien(inputfiles,col1,col2,col3):
         with open(fname,mode="r",encoding="utf-8") as fi:
             for line in fi:
                 i+=1
+                print "\r",fname,": line",i,
+                sys.stdout.flush()
                 bothcolumns=line.strip().split("\t")
                 #print bothcolumns
                 # alleen doorgaan als de kolom bestaat
