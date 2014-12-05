@@ -71,7 +71,7 @@ def replaceownindien(inputfiles,col1,col2,col3):
                 bothcolumns=line.strip().split("\t")
                 #print bothcolumns
                 # alleen doorgaan als de kolom bestaat
-                if len(bothcolumns)-1>=max(col1,col2):
+                if len(bothcolumns)-1>max(col1,col2):
                     repldict[bothcolumns[col3]]=[bothcolumns[col1],bothcolumns[col2]]
         print i,"expressions from",fname,"have been added to the replacement list"
     return repldict
