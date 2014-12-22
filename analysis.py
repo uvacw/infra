@@ -28,6 +28,7 @@ config.read('config.conf')
 dictionaryfile=config.get('files','dictionary')
 networkoutputfile=config.get('files','networkoutput')
 lloutputfile=config.get('files','loglikelihoodoutput')
+lloutputcorp1file==config.get('files','loglikelihoodoutputoverrepcorp1')
 cosdistoutputfile=config.get('files','cosdistoutput')
 compscoreoutputfile=config.get('files','compscoreoutput')
 databasename=config.get('mongodb','databasename')
@@ -201,7 +202,9 @@ def coocnet(n,minedgeweight):
 
 
 
-def llcompare(corpus1,corpus2,llbestand):
+def llcompare(corpus1,corpus2,llbestand,llbstand2):
+    # llbestand: full output
+    # llbestand2: only the words that are overrepresented in corpus 1, in the order of their loglikelihood
     # using the same terminology as the cited paper:
     # a = freq in corpus1
     # b = freq in corpus2
@@ -249,7 +252,7 @@ def llcompare(corpus1,corpus2,llbestand):
             e1dict[word]=0
             e2dict[word]=e2
     print "Writing results..."
-    with open(llbestand, mode='w', encoding="utf-8") as f:
+    with open(llbestand, mode='w', encoding="utf-8") as f, open(llbestand2, mode='w', encoding="utf-8") as f2:
             f.write("ll,word,freqcorp1,expectedcorp1,freqcorp2,expectedcorp2\n")
             for word,value in sorted(ll.iteritems(), key=lambda (word,value): (value, word), reverse=True):
                     # print value,word
@@ -264,6 +267,8 @@ def llcompare(corpus1,corpus2,llbestand):
                     e1=str(e1dict[word])
                     e2=str(e2dict[word])
                     f.write(str(value)+","+word+","+str(freqcorp1)+","+e1+","+str(freqcorp2)+","+e2+"\n")
+                    # if the word is OVERrepresented in corp 1 (observed > expected), then it is also written in llbestand2
+                    if freqcorp1>e1: f2.write(word+"\n")
     print "Output written to",llbestand
 
 
@@ -277,7 +282,7 @@ def ll():
     corpus2=frequencies()
     print len(corpus2)
     subset=subsetbak
-    llcompare(corpus1,corpus2,lloutputfile)
+    llcompare(corpus1,corpus2,lloutputfile,lloutputcorp1file)
 
 
 
