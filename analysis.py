@@ -268,7 +268,7 @@ def llcompare(corpus1,corpus2,llbestand,llbestand2):
                     e2=str(e2dict[word])
                     f.write(str(value)+","+word+","+str(freqcorp1)+","+e1+","+str(freqcorp2)+","+e2+"\n")
                     # if the word is OVERrepresented in corp 1 (observed > expected), then it is also written in llbestand2
-                    if freqcorp1>e1: f2.write(word+"\n")
+                    if freqcorp1>e1dict[word]: f2.write(word+"\n")
     print "Output written to",llbestand
 
 
