@@ -202,7 +202,7 @@ def coocnet(n,minedgeweight):
 
 
 
-def llcompare(corpus1,corpus2,llbestand,llbstand2):
+def llcompare(corpus1,corpus2,llbestand,llbestand2):
     # llbestand: full output
     # llbestand2: only the words that are overrepresented in corpus 1, in the order of their loglikelihood
     # using the same terminology as the cited paper:
