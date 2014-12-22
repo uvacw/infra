@@ -52,6 +52,11 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
     language = {}
     pubtype = {}
     journal = {}
+    pubdate_day = {}
+    pubdate_month = {}
+    pubdate_year = {}
+    pubdate_dayofweek = {}
+
     if recursive:
         alleinputbestanden = []
         for path, subFolders, files in walk(pathwithlnfiles):
@@ -75,6 +80,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                 if line == "\n":
                     continue
                 matchObj = re.match(r"\s+(\d+) of (\d+) DOCUMENTS", line)
+                matchObj2 = re.match(r"\s+(\d{1,2}) (januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december) (\d{4}) (maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)", line)
                 if matchObj:
                     artikel += 1
                     tekst[artikel] = ""
@@ -87,6 +93,11 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                     length[artikel] = line.replace("LENGTH: ", "").rstrip("\n").rstrip(" woorden")
                 elif line.startswith("LOAD-DATE"):
                     loaddate[artikel] = line.replace("LOAD-DATE: ", "").rstrip("\n")
+                elif matchObj2:
+                    pubdate_day[artikel]=matchObj2.group(1)
+                    pubdate_month[artikel]=matchObj2.group(2)
+                    pubdate_year[artikel]=matchObj2.group(3)
+                    pubdate_dayofweek[artike]=matchObj2.group(4)
                 elif line.startswith("LANGUAGE"):
                     language[artikel] = line.replace("LANGUAGE: ", "").rstrip("\n")
                 elif line.startswith("PUBLICATION-TYPE"):
@@ -104,11 +115,15 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                     tekst[artikel] = tekst[artikel] + " " + line.rstrip("\n")
     print "Done!", artikel, "articles added."
 
-    if not len(journal) == len(loaddate) == len(section) == len(language) == len(byline) == len(length) == len(tekst):
+    if not len(journal) == len(loaddate) == len(section) == len(language) == len(byline) == len(length) == len(tekst) == len(pubdate_year) == len(pubdate_dayofweek) ==len(pubdate_day) ==len(pubdate_month):
         print "!!!!!!!!!!!!!!!!!!!!!!!!!"
         print "Ooooops! Not all articles seem to have data for each field. These are the numbers of fields that where correctly coded (and, of course, they should be equal to the number of articles, which they aren't in all cases."
         print "journal", len(journal)
         print "loaddate", len(loaddate)
+        print "pubdate_day",len(pubdate_day)
+        print "pubdate_month",len(pubdate_month)
+        print "pubdate_year",len(pubdate_year)
+        print "pubdate_dayofweek",len(pubdate_dayofweek)
         print "section", len(section)
         print "language", len(language)
         print "byline", len(byline)
@@ -128,9 +143,25 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
         except:
             art_source = "NA"
         try:
-            art_date = loaddate[i + 1]
+            art_loaddate = loaddate[i + 1]
         except:
-            art_date = "NA"
+            art_loaddate = "NA"
+        try:
+            art_pubdate_day = pubdate_day[i + 1]
+        except:
+            art_pubdate_day = "NA"
+        try:
+            art_pubdate_month = pubdate_month[i + 1]
+        except:
+            art_pubdate_month = "NA"
+        try:
+            art_pubdate_year = pubdate_year[i + 1]
+        except:
+            art_pubdate_year = "NA"
+        try:
+            art_pubdate_dayofweek = pubdate_dayofweek[i + 1]
+        except:
+            art_pubdate_dayofweek = "NA"
         try:
             art_section = section[i + 1]
         except:
@@ -151,9 +182,22 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
             art_byline = byline[i + 1]
         except:
             art_byline = "NA"
-        art = {"source": art_source.lower(), "date": art_date, "section": art_section.lower(),
+
+        # here, we are going to add an extra field for texts that probably are no "real" articles
+        # first criterion: stock exchange notacions and similiar lists:
+        ii=0
+        jj=0
+        for token in art_text.replace(",","").replace(".","").split():
+            ii+=1
+            if token.isdigit():
+                jj+=1
+        # if more than 25% of the tokens are numbers, then suspicious = True.
+        art_suspicious = jj > .25 * ii
+
+
+        art = {"source": art_source.lower(), "loaddate": art_loaddate, "pubdate_day":art_pubdate_day, "pubdate_month":art_pubdate_month, "pubdate_year":art_pubdate_year, "pubdate_dayofweek":art_pubdate_dayofweek, "section": art_section.lower(),
                "language": art_language.lower(), "length": art_length, "text": art_text, "byline": art_byline,
-               "from-database": "lexisnexis"}
+               "from-database": "lexisnexis", "suspicious":art_suspicious}
         article_id = collection.insert(art)
 
 
