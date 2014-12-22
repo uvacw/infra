@@ -270,6 +270,7 @@ def llcompare(corpus1,corpus2,llbestand,llbestand2):
                     # if the word is OVERrepresented in corp 1 (observed > expected), then it is also written in llbestand2
                     if freqcorp1>e1dict[word]: f2.write(word+"\n")
     print "Output written to",llbestand
+    print "Those words whith observed frequency > expected frequency in Corpus 1 are additionally (sorted by descending LL) written to",llbestand2
 
 
 
