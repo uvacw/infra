@@ -137,6 +137,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
     else:
         print "No missing values encountered."
 
+    suspicious=0
     for i in range(artikel):
         try:
             art_source = journal[i + 1]
@@ -193,13 +194,13 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                 jj+=1
         # if more than 25% of the tokens are numbers, then suspicious = True.
         art_suspicious = jj > .25 * ii
-
+        if art_suspicious: suspicious+=1
 
         art = {"source": art_source.lower(), "loaddate": art_loaddate, "pubdate_day":art_pubdate_day, "pubdate_month":art_pubdate_month, "pubdate_year":art_pubdate_year, "pubdate_dayofweek":art_pubdate_dayofweek, "section": art_section.lower(),
                "language": art_language.lower(), "length": art_length, "text": art_text, "byline": art_byline,
                "from-database": "lexisnexis", "suspicious":art_suspicious}
         article_id = collection.insert(art)
-
+    print '\nInserted',len(tekst),"articles, out of which",suspicious,"might not be real articles, but, e.g., lists of stock shares. "
 
 def adhocclean(bestand):
     repldict = {}
