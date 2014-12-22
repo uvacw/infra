@@ -97,7 +97,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                     pubdate_day[artikel]=matchObj2.group(1)
                     pubdate_month[artikel]=matchObj2.group(2)
                     pubdate_year[artikel]=matchObj2.group(3)
-                    pubdate_dayofweek[artike]=matchObj2.group(4)
+                    pubdate_dayofweek[artikel]=matchObj2.group(4)
                 elif line.startswith("LANGUAGE"):
                     language[artikel] = line.replace("LANGUAGE: ", "").rstrip("\n")
                 elif line.startswith("PUBLICATION-TYPE"):
