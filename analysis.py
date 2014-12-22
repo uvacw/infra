@@ -91,9 +91,8 @@ def frequencies_nodict():
            unknown+=[woord for woord in item["text"].split() if woord not in knownwords]
        else:
            unknown+=[woord for woord in stemmed(item["text"],stemming_language).split() if woord not in knownwords]
-
     c=Counter(unknown)
-
+    print
     return c
 
 
@@ -117,6 +116,7 @@ def frequencies():
            c.update([woord for woord in split2ngrams(item["text"],ngrams)]) 
        else:
            c.update([woord for woord in split2ngrams(stemmed(item["text"],stemming_language),ngrams)])  
+    print
     return c
 
 
@@ -355,7 +355,8 @@ def tfcospca(n,file,comp,varimax):
     pca.fit(COSDIST)
     # wel te repiceren in stata met pca *, components(3) covariance , SPSS Heeft wat afwijkingen maar klopt in principe ook als je covariance ipv correlation matrix kiest
     
-    print "\nExplained variance of each component:",pca.explained_variance_ratio_,"\n"
+    print "\nExplained variance of each component:",pca.explained_variance_ratio_
+    print "\nEigenvalue of each component:",pca.explained_variance_,"\n"
     #loadings= pca.transform(COSDIST).tolist()
     #print len(pca.transform(COSDIST).tolist())
     
