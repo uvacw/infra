@@ -50,7 +50,7 @@ def replaceown(inputfiles,col1,col2):
                 # alleen doorgaan als de kolom bestaat
                 if len(bothcolumns)-1>=max(col1,col2):
                     repldict[bothcolumns[col1]]=bothcolumns[col2]
-        print i,"expressions from",fname,"have been added to the replacement list"
+        print "\n",i,"expressions from",fname,"have been added to the replacement list"
     return repldict
     
     
@@ -73,7 +73,7 @@ def replaceownindien(inputfiles,col1,col2,col3):
                 # alleen doorgaan als de kolom bestaat
                 if len(bothcolumns)-1>max(col1,col2):
                     repldict[bothcolumns[col3]]=[bothcolumns[col1],bothcolumns[col2]]
-        print i,"expressions from",fname,"have been added to the replacement list"
+        print "\n",i,"expressions from",fname,"have been added to the replacement list"
     return repldict
 
 
@@ -88,7 +88,7 @@ def main():
     # STEP 1.3: save output to general replacement list
     with open(outputbestand,mode="w",encoding="utf-8") as fo:
         fo.write(unicode(json.dumps(complrepldict,ensure_ascii=False)))
-    print "Finished writing",outputbestand
+    print "\nFinished writing",outputbestand
     print "YOU'RE READY WITH THE GENERAL REPLACEMENT LIST!\n"
 
     # STEP 2.1: Add rules that only have to be replaced if already one replacement according to rule above has taken
@@ -99,7 +99,7 @@ def main():
     # STEP 2.2: save output to second-mention-output file
     with open(outputbestand2,mode="w",encoding="utf-8") as fo:
         fo.write(unicode(json.dumps(complrepldict2,ensure_ascii=False)))
-    print "Finished writing",outputbestand2
+    print "\nFinished writing",outputbestand2
     print "YOU'RE READY WITH THE REPLACEMENT LIST FOR SECOND MENTIONS (e.g., LAST NAMES/FULL NAMES)!\n"
 
 
@@ -110,7 +110,7 @@ def main():
     with open(outputbestand3,mode="w",encoding="utf-8") as fo:
         fo.write(unicode(json.dumps(complrepldict3,ensure_ascii=False)))
     
-    print "Finished writing",outputbestand3
+    print "\nFinished writing",outputbestand3
     print "YOU'RE READY WITH THE REPLACEMENT LIST FOR REPLACEMENTST IN CASE OF INDICATORS BEING PRESENT!\n"
 
 
