@@ -193,7 +193,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
             if token.isdigit():
                 jj+=1
         # if more than 25% of the tokens are numbers, then suspicious = True.
-        art_suspicious = jj > .25 * ii
+        art_suspicious = jj > .16 * ii
         if art_suspicious: suspicious+=1
 
         art = {"source": art_source.lower(), "loaddate": art_loaddate, "pubdate_day":art_pubdate_day, "pubdate_month":art_pubdate_month, "pubdate_year":art_pubdate_year, "pubdate_dayofweek":art_pubdate_dayofweek, "section": art_section.lower(),
