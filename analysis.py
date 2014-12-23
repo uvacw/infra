@@ -328,7 +328,8 @@ def tfcospca(n,file,comp,varimax):
     elif n==0 and file!="":
         topnwords=[line.strip().lower() for line in open(file,mode="r",encoding="utf-8")]
     
-    all=collectioncleaned.find(subset,{"text": 1, "_id":1, "source":1})
+    #all=collectioncleaned.find(subset,{"text": 1, "_id":1, "source":1})
+    all=collectioncleaned.find(subset)
     # TF=np.empty([n,n-1])
     docs=[]
     foroutput_source=[]
