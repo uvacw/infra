@@ -334,10 +334,27 @@ def tfcospca(n,file,comp,varimax):
     foroutput_source=[]
     foroutput_firstwords=[]
     foroutput_id=[]
+    foroutput_byline = []
+    foroutput_section = []
+    foroutput_length = []
+    foroutput_language = []
+    foroutput_pubdate_day = []
+    foroutput_pubdate_month = []
+    foroutput_pubdate_year = []
+    foroutput_pubdate_dayofweek = []
+
     for item in all:
         foroutput_firstwords.append(item["text"][:20])
         foroutput_source.append(item["source"])
         foroutput_id.append(item["_id"])
+        foroutput_byline.append(item["byline"])
+        foroutput_section.append(item["section"])
+        foroutput_length.append(item["length"])
+        foroutput_language.append(item["language"])
+        foroutput_pubdate_day.append(item["pubdate_day"])
+        foroutput_pubdate_month.append(item["pubdate_month"])
+        foroutput_pubdate_year.append(item["pubdate_year"])
+        foroutput_pubdate_dayofweek.append(item["pubdate_dayofweek"])
         if stemming==0:
             c_item=Counter(split2ngrams(item["text"],ngrams))
         else:
@@ -412,7 +429,7 @@ def tfcospca(n,file,comp,varimax):
     
     with open(compscoreoutputfile,"w",encoding="utf-8") as fo:
         for row in scoresperdoc:
-            fo.write(unicode(foroutput_id[i])+","+foroutput_source[i]+","+foroutput_firstwords[i]+",")
+            fo.write(unicode(foroutput_id[i])+","+foroutput_source[i]+","+foroutput_firstwords[i]+","+foroutput_byline+","+foroutput_section+","+foroutput_length+","+foroutput_language+","+foroutput_pubdate_day+","+foroutput_pubdate_month+","+foroutput_pubdate_year+","+foroutput_pubdate_dayofweek+",")
             fo.write(','.join(["{:0.3f}".format(loading) for loading in row]))
             fo.write("\n")
             i+=1
