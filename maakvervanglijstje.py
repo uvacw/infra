@@ -30,7 +30,7 @@ def replacespaces(listwithwords):
         repldict[woord]=woord.replace(" ","_")
     return repldict
     
-    
+
 
 def replaceown(inputfiles,col1,col2):
     '''
@@ -43,16 +43,48 @@ def replaceown(inputfiles,col1,col2):
         with open(fname,mode="r",encoding="utf-8") as fi:
             for line in fi:
                 i+=1
-                print "\r",fname,": line",i,
-                sys.stdout.flush()
+                #print "\r",fname,": line",i,
+                #sys.stdout.flush()
                 bothcolumns=line.strip().split("\t")
                 #print bothcolumns
                 # alleen doorgaan als de kolom bestaat
                 if len(bothcolumns)-1>=max(col1,col2):
                     repldict[bothcolumns[col1]]=bothcolumns[col2]
-        print "\n",i,"expressions from",fname,"have been added to the replacement list"
+        #print "\n",i,"expressions from",fname,"have been added to the replacement list"
     return repldict
-    
+
+
+
+
+def replaceownlistoutput(inputfiles,col1,col2):
+    '''
+    col1 = column with the original expression
+    col2 = column with the replacement
+    '''
+    repldict=OrderedDict()
+    for fname in inputfiles:
+        i=0
+        with open(fname,mode="r",encoding="utf-8") as fi:
+            for line in fi:
+                i+=1
+                #print "\r",fname,": line",i,
+                #sys.stdout.flush()
+                bothcolumns=line.strip().split("\t")
+                #print bothcolumns
+                # alleen doorgaan als de kolom bestaat
+                if len(bothcolumns)-1>=max(col1,col2):
+                    if bothcolumns[col1] in repldict:
+                        #print "key:",bothcolumns[col1],"already exists with value",repldict[bothcolumns[col1]]
+                        #print "Skipping the following combination:"
+                        #print "Appending"
+                        #print "key:",bothcolumns[col1],"value:",bothcolumns[col2]
+                        repldict[bothcolumns[col1]]+=[bothcolumns[col2]]
+                    else:
+                        repldict[bothcolumns[col1]]=[bothcolumns[col2]]
+                    #print bothcolumns[col1],bothcolumns[col2]
+        #print "\n",i,"expressions from",fname,"have been added to the replacement list"
+    return repldict
+
     
 def replaceownindien(inputfiles,col1,col2,col3):
     '''
@@ -66,14 +98,14 @@ def replaceownindien(inputfiles,col1,col2,col3):
         with open(fname,mode="r",encoding="utf-8") as fi:
             for line in fi:
                 i+=1
-                print "\r",fname,": line",i,
-                sys.stdout.flush()
+                #print "\r",fname,": line",i,
+                #sys.stdout.flush()
                 bothcolumns=line.strip().split("\t")
                 #print bothcolumns
                 # alleen doorgaan als de kolom bestaat
                 if len(bothcolumns)-1>max(col1,col2):
                     repldict[bothcolumns[col3]]=[bothcolumns[col1],bothcolumns[col2]]
-        print "\n",i,"expressions from",fname,"have been added to the replacement list"
+        #print "\n",i,"expressions from",fname,"have been added to the replacement list"
     return repldict
 
 
@@ -83,6 +115,7 @@ def main():
     # STEP 1.1: add all multi-word expressions from a dictionary of the language in question ('s ochtends --> 's_ochtends)
     alldutchwords=[line.strip() for line in open(nlwoordenbestand,mode="r",encoding="utf-8")]
     complrepldict.update(replacespaces(alldutchwords))
+
     # STEP 1.2: add all own rules (column 0 and 1 from user-generated TAB file)
     complrepldict.update(replaceown(ownreplacements,0,1))
     # STEP 1.3: save output to general replacement list
@@ -95,7 +128,7 @@ def main():
     # place. Example: Jan Smit is replaced by jan_smit (1.2), now, also subsequent mentions of Smit (without Jan)
     # should be replaced by jan_smit
     complrepldict2=OrderedDict()
-    complrepldict2.update(replaceown(ownreplacements,2,1))
+    complrepldict2.update(replaceownlistoutput(ownreplacements,2,1))
     # STEP 2.2: save output to second-mention-output file
     with open(outputbestand2,mode="w",encoding="utf-8") as fo:
         fo.write(unicode(json.dumps(complrepldict2,ensure_ascii=False)))

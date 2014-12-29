@@ -34,7 +34,7 @@ tbl = dict.fromkeys(i for i in xrange(sys.maxunicode) if unicodedata.category(un
 
 
 def remove_punctuation(text):
-    return text.translate(tbl)
+    return text.replace("`","").replace("´","").translate(tbl)
 
 
 def insert_lexisnexis(pathwithlnfiles, recursive):
@@ -271,15 +271,16 @@ def clean_database():
         # functie 1b: als iemand een keer met z'n volledige naam genoemd wordt, ook de volgende keren dat alleen z'n achternaam wordt genoemd deze vervangen
         if numbsub > 0:
             for k, v in repldictpersons.iteritems():
-                #print "check",v
-                if v in thisart:
-                    thisart = re.sub("\\b" + k + "\\b", v, thisart)
-                #print "Replaced",k,"by",v
+                #print "For",k,", there are",len(v),"rules."
+                for vv in v:
+                    if vv in thisart:
+                        thisart = re.sub("\\b" + k + "\\b", vv, thisart)
+                        #print "Replaced",k,"by",vv
         for k in repldictindien:
             #print "check",v
             if k in thisart:
                 thisart = re.sub("\\b" + repldictindien[k][0] + "\\b", repldictindien[k][1], thisart)
-                print "Replaced", repldictindien[k][0], "by", repldictindien[k][1], "because", k, "was mentioned"
+                #print "Replaced", repldictindien[k][0], "by", repldictindien[k][1], "because", k, "was mentioned"
 
 
         thisart = remove_punctuation(thisart.lower())
