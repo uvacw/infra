@@ -279,9 +279,9 @@ def clean_database():
         for k, v in repldictindien.iteritems():
             if re.findall("\\b" + k + "\\b",thisart):
                 for vv in v:
-                    print "checking vv",vv,"and k",k
+                    #print "checking vv",vv,"and k",k
                     thisart = re.sub("\\b" + vv[0] + "\\b", vv[1], thisart)
-                print "Replaced", vv[0], "by", vv[1], "because", k, "was mentioned"
+                #print "Replaced", vv[0], "by", vv[1], "because", k, "was mentioned"
 
 
         thisart = remove_punctuation(thisart.lower())
