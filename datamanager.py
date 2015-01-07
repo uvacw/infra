@@ -276,11 +276,12 @@ def clean_database():
                     if vv in thisart:
                         thisart = re.sub("\\b" + k + "\\b", vv, thisart)
                         #print "Replaced",k,"by",vv
-        for k in repldictindien:
-            #print "check",v
-            if k in thisart:
-                thisart = re.sub("\\b" + repldictindien[k][0] + "\\b", repldictindien[k][1], thisart)
-                #print "Replaced", repldictindien[k][0], "by", repldictindien[k][1], "because", k, "was mentioned"
+        for k, v in repldictindien.iteritems():
+            if re.findall("\\b" + k + "\\b",thisart):
+                for vv in v:
+                    print "checking vv",vv,"and k",k
+                    thisart = re.sub("\\b" + vv[0] + "\\b", vv[1], thisart)
+                print "Replaced", vv[0], "by", vv[1], "because", k, "was mentioned"
 
 
         thisart = remove_punctuation(thisart.lower())

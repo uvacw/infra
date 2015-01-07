@@ -104,7 +104,10 @@ def replaceownindien(inputfiles,col1,col2,col3):
                 #print bothcolumns
                 # alleen doorgaan als de kolom bestaat
                 if len(bothcolumns)-1>max(col1,col2):
-                    repldict[bothcolumns[col3]]=[bothcolumns[col1],bothcolumns[col2]]
+                    if bothcolumns[col3] in repldict:
+                        repldict[bothcolumns[col3]]+=[[bothcolumns[col1],bothcolumns[col2]]]
+                    else:
+                        repldict[bothcolumns[col3]]=[[bothcolumns[col1],bothcolumns[col2]]]
         #print "\n",i,"expressions from",fname,"have been added to the replacement list"
     return repldict
 
