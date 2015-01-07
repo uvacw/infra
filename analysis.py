@@ -18,7 +18,7 @@ from sklearn.metrics import pairwise_distances
 from sklearn.decomposition import PCA
 import os
 # from scipy.spatial.distance import cosine
-# from sklearn import preprocessing
+from sklearn import preprocessing
 
 
 
@@ -44,6 +44,43 @@ collectioncleaned = db[collectionnamecleaned]
 print "Ensure that the articles are properly indexed..."
 collectioncleaned.ensure_index([("text", TEXT)], cache_for=300,default_language="nl",language_override="nl")
 print "Done building index."
+
+
+def removezerovariance(A):
+    '''
+    Takes a numpy array as input and removes all rows and columns with zero variance
+    '''
+
+    colvar=A.var(0)
+    rowvar=A.var(1)
+    colvaris0=np.equal(colvar, np.zeros(1))
+    rowvaris0=np.equal(rowvar, np.zeros(1))
+
+    i=0
+    colindices=[]
+    for bo in colvaris0:
+        if bo == True:
+            colindices.append(i)
+
+    i+=1
+
+    i=0
+    rowindices=[]
+    for bo in rowvaris0:
+        if bo == True:
+            rowindices.append(i)
+
+    i+=1
+
+    print "Removing the following rows because they have zero variance:",rowindices
+    print "Removing colums because they have zero variance:",colindices
+
+    A = np.delete(A, (rowindices), axis=0)
+    A = np.delete(A, (colindices), axis=1)
+    return A
+
+
+
 
 
 
@@ -321,7 +358,7 @@ def tfcospca(n,file,comp,varimax):
     comp = number of components or, if 0<n<1, min eigenvalue of each component
     varimax = bool to indicate whether a varimax rotation should be performed 
     '''
-    
+
     if n>0 and file=="":
         c=frequencies()
         topnwords=[a for a,b in c.most_common(n)]
@@ -349,7 +386,11 @@ def tfcospca(n,file,comp,varimax):
         foroutput_source.append(item["source"])
         foroutput_id.append(item["_id"])
         foroutput_byline.append(item["byline"])
-        foroutput_section.append(item["section"])
+        #foroutput_section.append(item["section"])
+        # seperate section and pagenumber instead, tailored to Dutch Lexis Nexis
+        sectie=item["section"].split(";")
+        foroutput_section.append(sectie[0]+"\t"+sectie[1].strip("blz. "))
+        # end
         foroutput_length.append(item["length"])
         foroutput_language.append(item["language"])
         foroutput_pubdate_day.append(item["pubdate_day"])
@@ -364,6 +405,7 @@ def tfcospca(n,file,comp,varimax):
         for word in topnwords:
             tf_item.append(c_item[word])
         docs.append(tf_item)
+
     TF=np.array(docs).T
     print "\n\nCreated a {} by {} TF-document matrix which looks like this:".format(*TF.shape)
     print TF
@@ -371,11 +413,14 @@ def tfcospca(n,file,comp,varimax):
     print "\nAs a {} by {} cosine distance matrix, it looks like this:".format(*COSDIST.shape)
     print COSDIST
 
+    COSDIST=removezerovariance(COSDIST)
+
     print "\nConducting a principal component analysis..."
     # method following http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
     pca = PCA(n_components=comp)
-    # volgende regel is eigenlijk overbodig, zouden niet moeten standardiseren (alles toch op dezelfde schaal gemeten + cosinus-transformatie gedaan), maar in het kader van vergelijkbaarheid met SPSS/STATA/R-output doen we het toch...
-    # COSDIST-preprocessing.scale(COSDIST)
+    # volgende regel zou eigenlijk overbodig moeten zijn, zouden niet moeten standardiseren (alles toch op dezelfde schaal gemeten + cosinus-transformatie gedaan), maar in het kader van vergelijkbaarheid met SPSS/STATA/R-output doen we het toch...
+    # zonder deze regel krijk je wel hele rare eigenvalues...
+    COSDIST=preprocessing.scale(COSDIST)
     pca.fit(COSDIST)
     # wel te repiceren in stata met pca *, components(3) covariance , SPSS Heeft wat afwijkingen maar klopt in principe ook als je covariance ipv correlation matrix kiest
     
@@ -431,7 +476,7 @@ def tfcospca(n,file,comp,varimax):
     with open(compscoreoutputfile,"w",encoding="utf-8") as fo:
         for row in scoresperdoc:
             fo.write(unicode(foroutput_id[i])+'\t'+foroutput_source[i]+'\t'+foroutput_firstwords[i]+'\t'+foroutput_byline[i]+'\t'+foroutput_section[i]+'\t'+foroutput_length[i]+'\t'+foroutput_language[i]+'\t'+foroutput_pubdate_day[i]+'\t'+foroutput_pubdate_month[i]+'\t'+foroutput_pubdate_year[i]+'\t'+foroutput_pubdate_dayofweek[i]+'\t')
-            fo.write(','.join(["{:0.3f}".format(loading) for loading in row]))
+            fo.write('\t'.join(["{:0.3f}".format(loading) for loading in row]))
             fo.write("\n")
             i+=1
 
