@@ -386,10 +386,10 @@ def tfcospca(n,file,comp,varimax):
         foroutput_source.append(item["source"])
         foroutput_id.append(item["_id"])
         foroutput_byline.append(item["byline"])
-        #foroutput_section.append(item["section"])
+        foroutput_section.append(item["section"])
         # seperate section and pagenumber instead, tailored to Dutch Lexis Nexis
-        sectie=item["section"].split(";")
-        foroutput_section.append(sectie[0]+"\t"+sectie[1].strip("blz. "))
+        # sectie=item["section"].split(";")
+        #foroutput_section.append(sectie[0]+"\t"+sectie[1].strip("blz. "))
         # end
         foroutput_length.append(item["length"])
         foroutput_language.append(item["language"])
@@ -419,7 +419,7 @@ def tfcospca(n,file,comp,varimax):
     # method following http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
     pca = PCA(n_components=comp)
     # volgende regel zou eigenlijk overbodig moeten zijn, zouden niet moeten standardiseren (alles toch op dezelfde schaal gemeten + cosinus-transformatie gedaan), maar in het kader van vergelijkbaarheid met SPSS/STATA/R-output doen we het toch...
-    # zonder deze regel krijk je wel hele rare eigenvalues...
+    # zonder deze regel krijk je wel hele rare eigenvalues... (logisch ook, aangezien de varianties anders zijn!)
     COSDIST=preprocessing.scale(COSDIST)
     pca.fit(COSDIST)
     # wel te repiceren in stata met pca *, components(3) covariance , SPSS Heeft wat afwijkingen maar klopt in principe ook als je covariance ipv correlation matrix kiest
@@ -431,6 +431,8 @@ def tfcospca(n,file,comp,varimax):
     
     loadings= pca.components_.T.tolist()   # let ook hier op het transposen 
     if varimax:
+        # TODO eigenvalues of rotated component matrix. Could work with this: http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigvals.html#numpy.linalg.eigvals , but for that, the matrix must have a square shape. I guess we'd have to retrieve the full PCA with _ALL_ components then
+        print "NB: The explained variance and the eigenvalues above refer to the unrotated components. Their calculation for the rotated components has not been implemented yet. For the time being, you can open the cosine distance file (which will be created in a minute) in STATA and run the 'pca' and 'rotate' commands, which should give exactly the same results as displayed below, but include the eigenvalues and explained variance for the rotated components as well.\n"
         loadings=rotvarimax(pca.components_.T).tolist()
         print "\nThe rotated component loadings (varimax) are:"
 
@@ -447,32 +449,23 @@ def tfcospca(n,file,comp,varimax):
     i=0
     
     
-    
+    '''
+    We could print the transformed scores, but that's of little interest, so let's skip that
     print "\n\nThe transformed scores are:"
-    
-    # DIT HIER KLOPT NIET (iig vlgs SPSS/STATA):
-    # scores=pca.transform(COSDIST).tolist()
-    # Dus maar zelf doen:
-    
     scores=np.dot(COSDIST,loadings)
     
     for row in scores:
         print topnwords[i],"\t\t",
         print '\t'.join(["{:.3f}".format(loading) for loading in row]) 
         i+=1
-    
+    '''
+
     # save loadings to a dataset
-    
     print "\nFor further analysis, a dataset with the component loadings for each document is saved to",compscoreoutputfile
     i=0
-    
-    # DAN IS DUS OOK DIT FOUT:
-    # scores=pca.transform(TF.T).tolist()
-    # nieuwe oplossing:
-    
+
     scoresperdoc=np.dot(TF.T,loadings)
 
-    
     with open(compscoreoutputfile,"w",encoding="utf-8") as fo:
         for row in scoresperdoc:
             fo.write(unicode(foroutput_id[i])+'\t'+foroutput_source[i]+'\t'+foroutput_firstwords[i]+'\t'+foroutput_byline[i]+'\t'+foroutput_section[i]+'\t'+foroutput_length[i]+'\t'+foroutput_language[i]+'\t'+foroutput_pubdate_day[i]+'\t'+foroutput_pubdate_month[i]+'\t'+foroutput_pubdate_year[i]+'\t'+foroutput_pubdate_dayofweek[i]+'\t')
@@ -493,7 +486,8 @@ def tfcospca(n,file,comp,varimax):
     os.remove(cosdistoutputfile+"TEMP")
 
 
-def rotvarimax(Phi, gamma = 1, q = 20, tol = 1e-6):
+def rotvarimax(Phi, gamma = 1.0, q = 20, tol = 1e-6):
+    # see http://stackoverflow.com/questions/17628589/perform-varimax-rotation-in-python-using-numpy and http://en.wikipedia.org/wiki/Talk%3aVarimax_rotation
     from numpy import eye, asarray, dot, sum, diag
     from numpy.linalg import svd
     p,k = Phi.shape
@@ -505,7 +499,7 @@ def rotvarimax(Phi, gamma = 1, q = 20, tol = 1e-6):
         u,s,vh = svd(dot(Phi.T,asarray(Lambda)**3 - (gamma/p) * dot(Lambda, diag(diag(dot(Lambda.T,Lambda))))))
         R = dot(u,vh)
         d = sum(s)
-        if d/d_old < tol: break
+        if d_old!=0 and d/d_old < tol: break
     print "The following Component Transformation Matrix has been determined for the rotation:"
     print R
     return dot(Phi, R)
