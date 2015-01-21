@@ -482,7 +482,7 @@ def tfcospca(n,file,comp,varimax):
         for row in scoresperdoc:
             fo.write(unicode(foroutput_id[i])+'\t'+foroutput_source[i]+'\t'+foroutput_firstwords[i]+'\t'+foroutput_byline[i]+'\t'+foroutput_section[i]+'\t'+foroutput_length[i]+'\t'+foroutput_language[i]+'\t'+foroutput_pubdate_day[i]+'\t'+foroutput_pubdate_month[i]+'\t'+foroutput_pubdate_year[i]+'\t'+foroutput_pubdate_dayofweek[i]+'\t')
             fo.write('\t'.join(["{:0.3f}".format(loading) for loading in row]))
-            fo.write('\t'.join(foroutput_alltermscounts[i]))
+            fo.write(foroutput_alltermscounts[i])
             fo.write("\n")
             i+=1
 
