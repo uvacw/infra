@@ -403,8 +403,8 @@ def tfcospca(n,file,comp,varimax):
         foroutput_pubdate_dayofweek.append(item["pubdate_dayofweek"])
         termcounts=""
         for term in allterms:
-            termcounts+=(str(item["text"].count(term))+"\t")
-        foroutput_alltermscounts.append(termcounts.rstrip("\t"))
+            termcounts+=("\t"+str(item["text"].split().count(term)))
+        foroutput_alltermscounts.append(termcounts)
         if stemming==0:
             c_item=Counter(split2ngrams(item["text"],ngrams))
         else:
