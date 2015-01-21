@@ -381,6 +381,10 @@ def tfcospca(n,file,comp,varimax):
     foroutput_pubdate_year = []
     foroutput_pubdate_dayofweek = []
 
+    allterms=subset['$text']['$search'].decode("utf-8").split()
+    foroutput_alltermslabels="\t".join(allterms)
+    foroutput_alltermscounts=[]
+
     for item in all:
         foroutput_firstwords.append(item["text"][:20])
         foroutput_source.append(item["source"])
@@ -397,6 +401,10 @@ def tfcospca(n,file,comp,varimax):
         foroutput_pubdate_month.append(item["pubdate_month"])
         foroutput_pubdate_year.append(item["pubdate_year"])
         foroutput_pubdate_dayofweek.append(item["pubdate_dayofweek"])
+        termcounts=""
+        for term in allterms:
+            termcounts+=(str(item["text"].count(term))+"\t")
+        foroutput_alltermscounts.append(termcounts.rstrip("\t"))
         if stemming==0:
             c_item=Counter(split2ngrams(item["text"],ngrams))
         else:
@@ -467,9 +475,14 @@ def tfcospca(n,file,comp,varimax):
     scoresperdoc=np.dot(TF.T,loadings)
 
     with open(compscoreoutputfile,"w",encoding="utf-8") as fo:
+        pcalabels=""
+        for j in range(len(loadings[0])):
+            pcalabels+=("\tComp"+str(j+1))
+        fo.write('id\t'+'source\t'+'firstwords\t'+'byline\t'+'section\t'+'length\t'+'language\t'+'pubdate_day\t'+'pubdate_month\t'+'pubdate_year\t'+'pubdate_dayofweek'+pcalabels+"\t"+foroutput_alltermslabels+"\n")
         for row in scoresperdoc:
             fo.write(unicode(foroutput_id[i])+'\t'+foroutput_source[i]+'\t'+foroutput_firstwords[i]+'\t'+foroutput_byline[i]+'\t'+foroutput_section[i]+'\t'+foroutput_length[i]+'\t'+foroutput_language[i]+'\t'+foroutput_pubdate_day[i]+'\t'+foroutput_pubdate_month[i]+'\t'+foroutput_pubdate_year[i]+'\t'+foroutput_pubdate_dayofweek[i]+'\t')
             fo.write('\t'.join(["{:0.3f}".format(loading) for loading in row]))
+            fo.write('\t'.join(foroutput_alltermscounts[i]))
             fo.write("\n")
             i+=1
 
