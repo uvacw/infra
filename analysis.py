@@ -19,6 +19,7 @@ from sklearn.decomposition import PCA
 import os
 # from scipy.spatial.distance import cosine
 from sklearn import preprocessing
+from sklearn.cluster import KMeans
 
 
 
@@ -522,7 +523,7 @@ def rotvarimax(Phi, gamma = 1.0, q = 20, tol = 1e-6):
 
 
 
-def kmeans(n,file,noclusters):
+def kmeans(n,file,noclusters,normalize):
     '''
     n = N most frequent words to include
     file = alternative to n, use words from inputfile file
@@ -584,9 +585,9 @@ def kmeans(n,file,noclusters):
 
     TF=np.array(docs)   # let op, in tegenstelling tot de PCA hier niet transposen (.T), want we willen niet de variabelen clusteren maar de documenten
 
+    if normalize:
+        TF=preprocessing.normalize(TF.astype((float)),axis=0)
 
-
-    from sklearn.cluster import KMeans
     from sklearn import metrics
 
     km = KMeans(n_clusters=noclusters, init='k-means++', max_iter=100, n_init=1, verbose=True)
@@ -598,6 +599,14 @@ def kmeans(n,file,noclusters):
     #print "V-measure: %0.3f" % metrics.v_measure_score(labels, km.labels_)
     #print "Adjusted Rand-Index: %.3f" % metrics.adjusted_rand_score(labels, km.labels_)
     #print "Silhouette Coefficient: %0.3f" % metrics.silhouette_score(X, labels, sample_size=1000)
+
+    print "Cluster sizes:"
+    counts=np.bincount(clustersolution)
+    print "         \tFreq\t%"
+    i=0
+    for count in counts:
+        print "Cluster\t",i,"\t",count,"\t","{:.2f}".format(100*count/len(foroutput_id))
+        i+=1
 
     print "Top terms per cluster:"
     order_centroids = km.cluster_centers_.argsort()[:, ::-1]
@@ -653,6 +662,7 @@ def main():
     parser.add_argument("--subset", help="Use MongoDB-style .find() filter in form of a Python dict. E.g.:  --subset=\"{'source':'de Volkskrant'}\" or --subset=\"{'\\$text':{'\\$search':'hema'}}\" or a combination of both: --subset=\"{'\\$text':{'\\$search':'hema'}}\",'source':'de Volkskrant'}\"")
     parser.add_argument("--subset2", help="Compare the first subset specified not to the whole dataset but to another subset. Only evaluated together with --ll.")
     parser.add_argument("--varimax", help="If specified with --pca or --pca_ownwords, a varimax rotation is performed",action="store_true")
+    parser.add_argument("--normalize", help="If specified with --kmeans or --kmeans_ownwords, TF-matrix is normalized before the cluster analysis starts",action="store_true")
     parser.add_argument("--ngrams",metavar="N",help="By default, all operations are carried oud on single words. If you want to use bigrams instead, specify --ngram=2, or 3 for trigrams and so on.",nargs=1)
     parser.add_argument("--stemmer",metavar="language",help='Invokes the snowball stemming algorithm. Specify the language: --stemmer="dutch"',nargs=1)
     # parser.add_argument("--search", help="Use MongoDB-style text search in form of a Python dict. E.g.:  --subset \"{'\\$text':{'\\$search':'hema'}}\"")
@@ -739,10 +749,10 @@ def main():
         tfcospca(0,args.pca_ownwords[0],float(args.pca_ownwords[1]),args.varimax)
 
     if args.kmeans:
-        kmeans(int(args.kmeans[0]),"",int(args.kmeans[1]))
+        kmeans(int(args.kmeans[0]),"",int(args.kmeans[1]),args.normalize)
 
     if args.kmeans_ownwords:
-        kmeans(0,args.kmeans_ownwords[0],int(args.kmeans_ownwords[1]))
+        kmeans(0,args.kmeans_ownwords[0],int(args.kmeans_ownwords[1]),args.normalize)
 
 
 
