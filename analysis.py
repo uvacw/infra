@@ -31,6 +31,7 @@ lloutputfile=config.get('files','loglikelihoodoutput')
 lloutputcorp1file=config.get('files','loglikelihoodoutputoverrepcorp1')
 cosdistoutputfile=config.get('files','cosdistoutput')
 compscoreoutputfile=config.get('files','compscoreoutput')
+clusteroutputfile=config.get('files','clusteroutput')
 databasename=config.get('mongodb','databasename')
 collectionname=config.get('mongodb','collectionname')
 collectionnamecleaned=config.get('mongodb','collectionnamecleaned')
@@ -521,11 +522,117 @@ def rotvarimax(Phi, gamma = 1.0, q = 20, tol = 1e-6):
 
 
 
+def kmeans(n,file,noclusters):
+    '''
+    n = N most frequent words to include
+    file = alternative to n, use words from inputfile file
+    nocluster = number of clusters
+    '''
+
+    if n>0 and file=="":
+        c=frequencies()
+        topnwords=[a for a,b in c.most_common(n)]
+    elif n==0 and file!="":
+        topnwords=[line.strip().lower() for line in open(file,mode="r",encoding="utf-8")]
+
+    all=collectioncleaned.find(subset)
+    docs=[]
+    foroutput_source=[]
+    foroutput_firstwords=[]
+    foroutput_id=[]
+    foroutput_byline = []
+    foroutput_section = []
+    foroutput_length = []
+    foroutput_language = []
+    foroutput_pubdate_day = []
+    foroutput_pubdate_month = []
+    foroutput_pubdate_year = []
+    foroutput_pubdate_dayofweek = []
+
+    allterms=subset['$text']['$search'].decode("utf-8").split()
+    foroutput_alltermslabels="\t".join(allterms)
+    foroutput_alltermscounts=[]
+
+    for item in all:
+        foroutput_firstwords.append(item["text"][:20])
+        foroutput_source.append(item["source"])
+        foroutput_id.append(item["_id"])
+        foroutput_byline.append(item["byline"])
+        foroutput_section.append(item["section"])
+        # seperate section and pagenumber instead, tailored to Dutch Lexis Nexis
+        # sectie=item["section"].split(";")
+        #foroutput_section.append(sectie[0]+"\t"+sectie[1].strip("blz. "))
+        # end
+        foroutput_length.append(item["length"])
+        foroutput_language.append(item["language"])
+        foroutput_pubdate_day.append(item["pubdate_day"])
+        foroutput_pubdate_month.append(item["pubdate_month"])
+        foroutput_pubdate_year.append(item["pubdate_year"])
+        foroutput_pubdate_dayofweek.append(item["pubdate_dayofweek"])
+        termcounts=""
+        for term in allterms:
+            termcounts+=("\t"+str(item["text"].split().count(term)))
+        foroutput_alltermscounts.append(termcounts)
+        if stemming==0:
+            c_item=Counter(split2ngrams(item["text"],ngrams))
+        else:
+            c_item=Counter(split2ngrams(stemmed(item["text"],stemming_language),ngrams))
+        tf_item=[]
+        for word in topnwords:
+            tf_item.append(c_item[word])
+        docs.append(tf_item)
+
+    TF=np.array(docs)   # let op, in tegenstelling tot de PCA hier niet transposen (.T), want we willen niet de variabelen clusteren maar de documenten
 
 
 
+    from sklearn.cluster import KMeans
+    from sklearn import metrics
+
+    km = KMeans(n_clusters=noclusters, init='k-means++', max_iter=100, n_init=1, verbose=True)
+
+    clustersolution=km.fit_predict(TF)
+
+    #print "Homogeneity: %0.3f" % metrics.homogeneity_score(labels, km.labels_)
+    #print "Completeness: %0.3f" % metrics.completeness_score(labels, km.labels_)
+    #print "V-measure: %0.3f" % metrics.v_measure_score(labels, km.labels_)
+    #print "Adjusted Rand-Index: %.3f" % metrics.adjusted_rand_score(labels, km.labels_)
+    #print "Silhouette Coefficient: %0.3f" % metrics.silhouette_score(X, labels, sample_size=1000)
+
+    print "Top terms per cluster:"
+    order_centroids = km.cluster_centers_.argsort()[:, ::-1]
+    #terms = vectorizer.get_feature_names()
+    #terms=topnwords
+    for i in range(noclusters):
+        print "Cluster %d:" % i
+        for ind in order_centroids[i, :10]:
+            print ' %s' % topnwords[ind]
+    print
+
+    print "The cluster centers are:"
+
+    clusterlabels="\t"
+    for j in range(noclusters):
+        clusterlabels+=("\tClu."+str(j))
+    print clusterlabels
+    loadings=km.cluster_centers_.T
+    i=0
+    for row in loadings:
+        print topnwords[i],"\t\t",
+        print '\t'.join(["{:.3f}".format(loading) for loading in row])
+        i+=1
+    i=0
+
+    # save clusters to a dataset
+    print "\nFor further analysis, a dataset with the cluster number for each document is saved to",clusteroutputfile
 
 
+    with open(clusteroutputfile,"w",encoding="utf-8") as fo:
+        fo.write('id\t'+'source\t'+'firstwords\t'+'byline\t'+'section\t'+'length\t'+'language\t'+'pubdate_day\t'+'pubdate_month\t'+'pubdate_year\t'+'pubdate_dayofweek\t'+'Cluster\t'+foroutput_alltermslabels+"\n")
+        for i in range(len(foroutput_id)):
+            fo.write(unicode(foroutput_id[i])+'\t'+foroutput_source[i]+'\t'+foroutput_firstwords[i]+'\t'+foroutput_byline[i]+'\t'+foroutput_section[i]+'\t'+foroutput_length[i]+'\t'+foroutput_language[i]+'\t'+foroutput_pubdate_day[i]+'\t'+foroutput_pubdate_month[i]+'\t'+foroutput_pubdate_year[i]+'\t'+foroutput_pubdate_dayofweek[i]+'\t'+str(clustersolution[i]))
+            fo.write(foroutput_alltermscounts[i])
+            fo.write("\n")
 
 
 
@@ -540,6 +647,8 @@ def main():
     group.add_argument("--network",metavar=("N1","N2"),help="Create .gdf network file to visualize word-cooccurrances of the N1 most frequently used words with a minimum edgeweight of N2. E.g.: --network 200 50",nargs=2)
     group.add_argument("--pca",metavar=("N1","N2"),help="Create .a document-tf- matrix with all selected articles and the N1 most frequent words, transform it to a cosine dissimilarity matrix and carry out a principal component analysis, resulting in N2 components",nargs=2)
     group.add_argument("--pca_ownwords",metavar=("FILE","N"),help="Create .a document-tf- matrix with all selected articles and the words stored in FILE (UTF-8, one per line), transform it to a cosine dissimilarity matrix and carry out a principal component analysis, resulting in N components. If 0<N<1, then all components, then all components with an explained variance > N are listed.",nargs=2)
+    group.add_argument("--kmeans",metavar=("N1","N2"),help="Create .a document-tf- matrix with all selected articles and the N1 most frequent words, and carry out a kmeans cluster analysis, resulting in N2 clusters",nargs=2)
+    group.add_argument("--kmeans_ownwords",metavar=("FILE","N"),help="Create .a document-tf- matrix with all selected articles and the words stored in FILE (UTF-8, one per line), transform it to a tf-idf matrix and carry out a kmeans cluster analysis, resulting in N clusters.",nargs=2)
     group.add_argument("--search", metavar="SEARCHTERM",help="Perform a simple search, no further options possible. E.g.:  --search hema")
     parser.add_argument("--subset", help="Use MongoDB-style .find() filter in form of a Python dict. E.g.:  --subset=\"{'source':'de Volkskrant'}\" or --subset=\"{'\\$text':{'\\$search':'hema'}}\" or a combination of both: --subset=\"{'\\$text':{'\\$search':'hema'}}\",'source':'de Volkskrant'}\"")
     parser.add_argument("--subset2", help="Compare the first subset specified not to the whole dataset but to another subset. Only evaluated together with --ll.")
@@ -628,6 +737,13 @@ def main():
         
     if args.pca_ownwords:
         tfcospca(0,args.pca_ownwords[0],float(args.pca_ownwords[1]),args.varimax)
+
+    if args.kmeans:
+        kmeans(int(args.kmeans[0]),"",int(args.kmeans[1]))
+
+    if args.kmeans_ownwords:
+        kmeans(0,args.kmeans_ownwords[0],int(args.kmeans_ownwords[1]))
+
 
 
 
