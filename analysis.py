@@ -494,7 +494,7 @@ def tfcospca(n,file,comp,varimax):
     # om te voorkomen dat numpy 1.7 of hoger nodig is, workaround zonder "header"
     np.savetxt(cosdistoutputfile+"TEMP",COSDIST,fmt=str("%1.6f"),delimiter=",")
     with open(cosdistoutputfile,"w",encoding="utf-8") as fo:
-        fo.write(",".join(topnwords))
+        fo.write(",".join([unicode(item) for item in topnwords]))
         fo.write("\n")
         with open (cosdistoutputfile+"TEMP","r",encoding="utf-8") as fi:
             fo.write(fi.read())
