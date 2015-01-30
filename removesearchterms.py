@@ -13,7 +13,8 @@ args= parser.parse_args()
 with open(args.filein,encoding="utf-8") as fi:
     lines=fi.readlines()
 
-output=[line for line in lines if line.strip() not in args.words]
+terms=args.words.decode("utf-8")
+output=[line for line in lines if line.strip() not in terms]
 
 with open(args.fileout,encoding="utf-8", mode="w") as fo:
     fo.writelines(output)
