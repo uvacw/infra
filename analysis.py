@@ -642,8 +642,8 @@ def kmeans(n,file,noclusters,normalize):
             fo.write(unicode(foroutput_id[i])+'\t'+foroutput_source[i]+'\t'+foroutput_firstwords[i]+'\t'+foroutput_byline[i]+'\t'+foroutput_section[i]+'\t'+foroutput_length[i]+'\t'+foroutput_language[i]+'\t'+foroutput_pubdate_day[i]+'\t'+foroutput_pubdate_month[i]+'\t'+foroutput_pubdate_year[i]+'\t'+foroutput_pubdate_dayofweek[i]+'\t'+str(clustersolution[i]))
             fo.write(foroutput_alltermscounts[i])
             fo.write("\n")
-
-            collectioncleaned.update({'_id':foroutput_id[i]},{'$set':{'cluster':clustersolution[i]}},upsert=False)
+            cl=int(clustersolution[i])
+            collectioncleaned.update({'_id':foroutput_id[i]},{'$set':{'cluster':cl}},upsert=False)
 
 
 
