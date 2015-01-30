@@ -643,6 +643,8 @@ def kmeans(n,file,noclusters,normalize):
             fo.write(foroutput_alltermscounts[i])
             fo.write("\n")
 
+            collectioncleaned.update({'_id':foroutput_id[i]},{'$set':{'cluster':clustersolution[i]}},upsert=False)
+
 
 
 
