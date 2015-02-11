@@ -11,6 +11,11 @@ from os.path import isfile, join, splitext
 import ConfigParser
 import argparse
 from collections import defaultdict, OrderedDict
+from pattern.nl import sentiment
+
+
+# TODO
+# variabele toon toevoegen
 
 # read config file and set up MongoDB
 config = ConfigParser.RawConfigParser()
@@ -180,6 +185,13 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
         except:
             art_text = "NA"
         try:
+            tone=sentiment(art_text)
+            art_polarity=str(tone[0])
+            art_subjectivity=str(tone[1])
+        except:
+            art_polarity="NA"
+            art_subjectivity="NA"
+        try:
             art_byline = byline[i + 1]
         except:
             art_byline = "NA"
@@ -198,7 +210,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
 
         art = {"source": art_source.lower(), "loaddate": art_loaddate, "pubdate_day":art_pubdate_day, "pubdate_month":art_pubdate_month, "pubdate_year":art_pubdate_year, "pubdate_dayofweek":art_pubdate_dayofweek, "section": art_section.lower(),
                "language": art_language.lower(), "length": art_length, "text": art_text, "byline": art_byline,
-               "from-database": "lexisnexis", "suspicious":art_suspicious}
+               "from-database": "lexisnexis", "suspicious":art_suspicious,"polarity":art_polarity,"subjectivity":art_subjectivity}
         article_id = collection.insert(art)
     print '\nInserted',len(tekst),"articles, out of which",suspicious,"might not be real articles, but, e.g., lists of stock shares. "
 
