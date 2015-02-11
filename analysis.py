@@ -21,7 +21,8 @@ import os
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 
-
+# TODO
+# bedrijf minimaal twee keer genoemd
 
 # read config file and set up MongoDB
 config = ConfigParser.RawConfigParser()
@@ -33,6 +34,7 @@ lloutputcorp1file=config.get('files','loglikelihoodoutputoverrepcorp1')
 cosdistoutputfile=config.get('files','cosdistoutput')
 compscoreoutputfile=config.get('files','compscoreoutput')
 clusteroutputfile=config.get('files','clusteroutput')
+ldaoutputfile=config.get('files','ldaoutput')
 databasename=config.get('mongodb','databasename')
 collectionname=config.get('mongodb','collectionname')
 collectionnamecleaned=config.get('mongodb','collectionnamecleaned')
@@ -327,29 +329,108 @@ def ll():
 
 
 
-def lda(ntopics,minfreq):
+def lda(minfreq,file,ntopics,):
     c=frequencies()
-    all=collectioncleaned.find(subset,{"text": 1, "_id":0})
-    
-    
-    if stemming ==0:
+    all=collectioncleaned.find(subset)
+
+    try:
+        allterms=subset['$text']['$search'].decode("utf-8").split()
+    except:
+        # voor het geval dat er geen zoektermen zijn gebruikt
+        allterms=[]
+    foroutput_alltermslabels="\t".join(allterms)
+    foroutput_alltermscounts=[]
+
+    foroutput_source=[]
+    foroutput_firstwords=[]
+    foroutput_id=[]
+    foroutput_byline = []
+    foroutput_section = []
+    foroutput_length = []
+    foroutput_language = []
+    foroutput_pubdate_day = []
+    foroutput_pubdate_month = []
+    foroutput_pubdate_year = []
+    foroutput_pubdate_dayofweek = []
+    for item in all:
+        foroutput_firstwords.append(item["text"][:20])
+        foroutput_source.append(item["source"])
+        foroutput_id.append(item["_id"])
+        foroutput_byline.append(item["byline"])
+        foroutput_section.append(item["section"])
+        # seperate section and pagenumber instead, tailored to Dutch Lexis Nexis
+        # sectie=item["section"].split(";")
+        #foroutput_section.append(sectie[0]+"\t"+sectie[1].strip("blz. "))
+        # end
+        foroutput_length.append(item["length"])
+        foroutput_language.append(item["language"])
+        foroutput_pubdate_day.append(item["pubdate_day"])
+        foroutput_pubdate_month.append(item["pubdate_month"])
+        foroutput_pubdate_year.append(item["pubdate_year"])
+        foroutput_pubdate_dayofweek.append(item["pubdate_dayofweek"])
+        termcounts=""
+        for term in allterms:
+            termcounts+=("\t"+str(item["text"].split().count(term)))
+        foroutput_alltermscounts.append(termcounts)
+
+
+
+
+    # TODO: integreren met bovenstaande code, nu moet .find nog een keer worden opgeroepen aangezien het een generator is
+    all=collectioncleaned.find(subset)
+    if stemming==0:
         # oude versie zonder ngrams: texts =[[word for word in item["text"].split()] for item in all]
         texts =[[word for word in split2ngrams(item["text"],ngrams)] for item in all]
     else:
         texts =[[word for word in split2ngrams(stemmed(item["text"],stemming_language),ngrams)] for item in all]
-    # unicode() is neccessary to convert ngram-tuples to strings
-    texts =[[unicode(word) for word in text if c[word]>=minfreq] for text in texts]
-    
+
+    if minfreq>0 and file=="":
+        # unicode() is neccessary to convert ngram-tuples to strings
+        texts =[[unicode(word) for word in text if c[word]>=minfreq] for text in texts]
+
+    elif minfreq==0 and file!="":
+        allowedwords=set(line.strip().lower() for line in open(file,mode="r",encoding="utf-8"))
+        # unicode() is neccessary to convert ngram-tuples to strings
+        texts =[[unicode(word) for word in text if word in allowedwords] for text in texts]
+
     # Create Dictionary.
     id2word = corpora.Dictionary(texts)
 
     # Creates the Bag of Word corpus.
     mm =[id2word.doc2bow(text) for text in texts]
     # Trains the LDA models.
-    lda = models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=ntopics, update_every=1, chunksize=10000, passes=1)
+    # lda = models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=ntopics, update_every=1, chunksize=10000, passes=1)
+    lda = models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=ntopics, alpha="auto")
     # Prints the topics.
-    for top in lda.print_topics(): 
+    for top in lda.print_topics(num_topics=ntopics, num_words=20):
         print "\n",top
+
+
+    print "\nFor further analysis, a dataset with the topic score for each document is saved to",ldaoutputfile
+    i=0
+
+    scoresperdoc=lda.inference(mm)
+
+
+    with open(ldaoutputfile,"w",encoding="utf-8") as fo:
+        topiclabels=""
+        for j in range(ntopics):
+            topiclabels+=("\tTopic"+str(j+1))
+        fo.write('id\t'+'source\t'+'firstwords\t'+'byline\t'+'section\t'+'length\t'+'language\t'+'pubdate_day\t'+'pubdate_month\t'+'pubdate_year\t'+'pubdate_dayofweek'+topiclabels+"\t"+foroutput_alltermslabels+"\n")
+        for row in scoresperdoc[0]:
+            #print type(row)
+            #regel=row.tolist()
+            #print len(regel)
+            #print type(regel)
+            #print regel
+            fo.write(unicode(foroutput_id[i])+'\t'+foroutput_source[i]+'\t'+foroutput_firstwords[i]+'\t'+foroutput_byline[i]+'\t'+foroutput_section[i]+'\t'+foroutput_length[i]+'\t'+foroutput_language[i]+'\t'+foroutput_pubdate_day[i]+'\t'+foroutput_pubdate_month[i]+'\t'+foroutput_pubdate_year[i]+'\t'+foroutput_pubdate_dayofweek[i]+'\t')
+
+            fo.write('\t'.join(["{:0.3f}".format(loading) for loading in row]))
+            fo.write(foroutput_alltermscounts[i])
+            fo.write("\n")
+            i+=1
+
+
 
 
 
@@ -382,8 +463,11 @@ def tfcospca(n,file,comp,varimax):
     foroutput_pubdate_month = []
     foroutput_pubdate_year = []
     foroutput_pubdate_dayofweek = []
-
-    allterms=subset['$text']['$search'].decode("utf-8").split()
+    try:
+        allterms=subset['$text']['$search'].decode("utf-8").split()
+    except:
+        # voor het geval dat er geen zoektermen zijn gebruikt
+        allterms=[]    
     foroutput_alltermslabels="\t".join(allterms)
     foroutput_alltermscounts=[]
 
@@ -550,7 +634,11 @@ def kmeans(n,file,noclusters,normalize):
     foroutput_pubdate_year = []
     foroutput_pubdate_dayofweek = []
 
-    allterms=subset['$text']['$search'].decode("utf-8").split()
+    try:
+        allterms=subset['$text']['$search'].decode("utf-8").split()
+    except:
+        # voor het geval dat er geen zoektermen zijn gebruikt
+        allterms=[]
     foroutput_alltermslabels="\t".join(allterms)
     foroutput_alltermscounts=[]
 
@@ -654,6 +742,7 @@ def main():
     group.add_argument("--frequencies",metavar="N",help="List the N most common words")
     group.add_argument("--frequencies_nodict",metavar="N",help="List the N most common words, but only those which are NOT in the specified dictionary (i.e., list all non-dutch words)")
     group.add_argument("--lda",metavar=("N1","N2"),help="Perform a Latent Diriclet Allocation analysis  based on words with a minimum frequency of N1 and generate N2 topics",nargs=2)
+    group.add_argument("--lda_ownwords",metavar=("FILE","N"),help="Perform a Latent Diriclet Allocation analysis  based on words in FILE and generate N topics",nargs=2)
     group.add_argument("--ll",help="Compare the loglikelihood of the words within the subset with the whole dataset",action="store_true")
     group.add_argument("--network",metavar=("N1","N2"),help="Create .gdf network file to visualize word-cooccurrances of the N1 most frequently used words with a minimum edgeweight of N2. E.g.: --network 200 50",nargs=2)
     group.add_argument("--pca",metavar=("N1","N2"),help="Create .a document-tf- matrix with all selected articles and the N1 most frequent words, transform it to a cosine dissimilarity matrix and carry out a principal component analysis, resulting in N2 components",nargs=2)
@@ -662,6 +751,7 @@ def main():
     group.add_argument("--kmeans_ownwords",metavar=("FILE","N"),help="Create .a document-tf- matrix with all selected articles and the words stored in FILE (UTF-8, one per line), transform it to a tf-idf matrix and carry out a kmeans cluster analysis, resulting in N clusters.",nargs=2)
     group.add_argument("--search", metavar="SEARCHTERM",help="Perform a simple search, no further options possible. E.g.:  --search hema")
     parser.add_argument("--subset", help="Use MongoDB-style .find() filter in form of a Python dict. E.g.:  --subset=\"{'source':'de Volkskrant'}\" or --subset=\"{'\\$text':{'\\$search':'hema'}}\" or a combination of both: --subset=\"{'\\$text':{'\\$search':'hema'}}\",'source':'de Volkskrant'}\"")
+    # ander voorbeeld: --subset="{'section':{'\$regex':'[Ee]conom'},'suspicious':False}"
     parser.add_argument("--subset2", help="Compare the first subset specified not to the whole dataset but to another subset. Only evaluated together with --ll.")
     parser.add_argument("--varimax", help="If specified with --pca or --pca_ownwords, a varimax rotation is performed",action="store_true")
     parser.add_argument("--normalize", help="If specified with --kmeans or --kmeans_ownwords, TF-matrix is normalized before the cluster analysis starts",action="store_true")
@@ -742,7 +832,10 @@ def main():
         ll()
 
     if args.lda:
-        lda(int(args.lda[1]),int(args.lda[0]))
+        lda(int(args.lda[0]),"",int(args.lda[1]))
+
+    if args.lda_ownwords:
+        lda(0,args.lda_ownwords[0],int(args.lda_ownwords[1]))
 
     if args.pca:
         tfcospca(int(args.pca[0]),"",float(args.pca[1]),args.varimax)
