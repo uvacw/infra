@@ -339,6 +339,7 @@ def lda(minfreq,file,ntopics,):
     except:
         # voor het geval dat er geen zoektermen zijn gebruikt
         allterms=[]
+    allterms+=extraterms
     foroutput_alltermslabels="\t".join(allterms)
     foroutput_alltermscounts=[]
 
@@ -473,6 +474,7 @@ def tfcospca(n,file,comp,varimax):
     except:
         # voor het geval dat er geen zoektermen zijn gebruikt
         allterms=[]    
+    allterms+=extraterms
     foroutput_alltermslabels="\t".join(allterms)
     foroutput_alltermscounts=[]
 
@@ -644,6 +646,7 @@ def kmeans(n,file,noclusters,normalize):
     except:
         # voor het geval dat er geen zoektermen zijn gebruikt
         allterms=[]
+    allterms+=extraterms
     foroutput_alltermslabels="\t".join(allterms)
     foroutput_alltermscounts=[]
 
@@ -762,6 +765,7 @@ def main():
     parser.add_argument("--normalize", help="If specified with --kmeans or --kmeans_ownwords, TF-matrix is normalized before the cluster analysis starts",action="store_true")
     parser.add_argument("--ngrams",metavar="N",help="By default, all operations are carried oud on single words. If you want to use bigrams instead, specify --ngram=2, or 3 for trigrams and so on.",nargs=1)
     parser.add_argument("--stemmer",metavar="language",help='Invokes the snowball stemming algorithm. Specify the language: --stemmer="dutch"',nargs=1)
+    parser.add_argument("--extraterms",help='When a dataset that includes word frequencies of some important words in the output (e.g., after LDA), this option allows to specify a space-seperated list of words to additionally include',nargs=1)
     # parser.add_argument("--search", help="Use MongoDB-style text search in form of a Python dict. E.g.:  --subset \"{'\\$text':{'\\$search':'hema'}}\"")
     
 
@@ -823,6 +827,12 @@ def main():
             sys.exit()
         print  "Subset to compare with is",subset2
 
+
+    global extraterms
+    if not args.extraterms:
+            extraterms=[]
+    else:
+            extraterms=args.extraterms[0].decode("utf-8").split()
 
     if args.search:
         query=db.command('text',collectionnamecleaned,search=args.search, language="nl")
