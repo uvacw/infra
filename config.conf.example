@@ -6,6 +6,8 @@ url=mongodb://localhost:27017/
 databasename=articles
 collectionname=WHATEVERYOULIKE
 collectionnamecleaned=WHATEVERYOULIKE
+collectionnamecleanedNJR=WHATEVERYOULIKE
+
 
 [files]
 replacementlist=/Users/path/to/your/replacementlist.json

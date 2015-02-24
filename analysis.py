@@ -39,16 +39,11 @@ ldaoutputfile=config.get('files','ldaoutput')
 databasename=config.get('mongodb','databasename')
 collectionname=config.get('mongodb','collectionname')
 collectionnamecleaned=config.get('mongodb','collectionnamecleaned')
+collectionnamecleanedNJR = config.get('mongodb','collectionnamecleanedNJR')
 client = MongoClient(config.get('mongodb','url'))
 db = client[databasename]
 collection = db[collectionname]
-collectioncleaned = db[collectionnamecleaned]
-
-
-
-print "Ensure that the articles are properly indexed..."
-collectioncleaned.ensure_index([("text", TEXT)], cache_for=300,default_language="nl",language_override="nl")
-print "Done building index."
+#collectioncleaned = db[collectionnamecleaned]
 
 
 def removezerovariance(A):
@@ -766,6 +761,7 @@ def main():
     parser.add_argument("--ngrams",metavar="N",help="By default, all operations are carried oud on single words. If you want to use bigrams instead, specify --ngram=2, or 3 for trigrams and so on.",nargs=1)
     parser.add_argument("--stemmer",metavar="language",help='Invokes the snowball stemming algorithm. Specify the language: --stemmer="dutch"',nargs=1)
     parser.add_argument("--extraterms",help='When a dataset that includes word frequencies of some important words in the output (e.g., after LDA), this option allows to specify a space-seperated list of words to additionally include',nargs=1)
+    parser.add_argument("--njronly",help="Use cleaned database with nouns, adjectives, and adverbs only, if created",action="store_true")
     # parser.add_argument("--search", help="Use MongoDB-style text search in form of a Python dict. E.g.:  --subset \"{'\\$text':{'\\$search':'hema'}}\"")
     
 
@@ -793,6 +789,18 @@ def main():
     else:
         stemming=1
         stemming_language=args.stemmer[0]
+
+
+    # determine which cleaned database to load
+    global collectioncleaned
+    if args.njronly:
+        collectioncleaned = db[collectionnamecleanedNJR]
+    else:
+        collectioncleaned = db[collectionnamecleaned]
+    print "Ensure that the articles are properly indexed..."
+    collectioncleaned.ensure_index([("text", TEXT)], cache_for=300,default_language="nl",language_override="nl")
+    print "Done building index."
+
 
 
     global subset
