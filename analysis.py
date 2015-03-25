@@ -27,7 +27,7 @@ from sklearn.cluster import KMeans
 
 # read config file and set up MongoDB
 config = ConfigParser.RawConfigParser()
-config.read('config.conf')
+config.read(os.path.dirname(os.path.abspath(__file__))+'/config.conf')
 dictionaryfile=config.get('files','dictionary')
 networkoutputfile=config.get('files','networkoutput')
 lloutputfile=config.get('files','loglikelihoodoutput')
@@ -40,8 +40,11 @@ databasename=config.get('mongodb','databasename')
 collectionname=config.get('mongodb','collectionname')
 collectionnamecleaned=config.get('mongodb','collectionnamecleaned')
 collectionnamecleanedNJR = config.get('mongodb','collectionnamecleanedNJR')
+username=config.get('mongodb','username')
+password=config.get('mongodb','password')
 client = MongoClient(config.get('mongodb','url'))
 db = client[databasename]
+db.authenticate(username,password)
 collection = db[collectionname]
 #collectioncleaned = db[collectionnamecleaned]
 

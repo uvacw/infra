@@ -6,10 +6,10 @@ from collections import OrderedDict
 import json
 import ConfigParser
 import sys
-
+import os
 
 config = ConfigParser.RawConfigParser()
-config.read('config.conf')
+config.read(os.path.dirname(os.path.abspath(__file__))+'/config.conf')
 
 nlwoordenbestand=config.get('files','dictionary')
 

@@ -12,14 +12,14 @@ import ConfigParser
 import argparse
 from collections import defaultdict, OrderedDict
 from pattern.nl import sentiment
-
+import os
 
 # TODO
 # variabele toon toevoegen
 
 # read config file and set up MongoDB
 config = ConfigParser.RawConfigParser()
-config.read('config.conf')
+config.read(os.path.dirname(os.path.abspath(__file__))+'/config.conf')
 replacementlistfile = config.get('files', 'replacementlist')
 stopwordsfile = config.get('files', 'stopwords')
 replacementlistlastnamesfile = config.get('files', 'replacementlistlastnames')
@@ -28,8 +28,13 @@ databasename = config.get('mongodb', 'databasename')
 collectionname = config.get('mongodb', 'collectionname')
 collectionnamecleaned = config.get('mongodb', 'collectionnamecleaned')
 collectionnamecleanedNJR = config.get('mongodb','collectionnamecleanedNJR')
+username=config.get('mongodb','username')
+password=config.get('mongodb','password')
 client = MongoClient(config.get('mongodb', 'url'))
 db = client[databasename]
+db.add_user(username,password)
+db.authenticate(username,password)
+
 collection = db[collectionname]
 collectioncleaned = db[collectionnamecleaned]
 collectioncleanedNJR = db[collectionnamecleanedNJR]
@@ -79,7 +84,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
     artikel = 0
     for bestand in alleinputbestanden:
         print "Now processing", bestand
-        with open(bestand, "r", encoding="utf-8") as f:
+        with open(bestand, "r", encoding="utf-8", errors="replace") as f:
             i = 0
             for line in f:
                 i = i + 1
