@@ -20,7 +20,7 @@ for path, subFolders, files in walk(mypath):
 		if isfile(join(path,f)) and splitext(f)[1].lower()==".txt":
 			alleinputbestanden.append(join(path,f))
 
-i=0
+j=0
 for path in alleinputbestanden:
 	# print path
 	with open(path, "r+b") as fp:
@@ -42,6 +42,6 @@ for path in alleinputbestanden:
 	txt = txt.replace('\r','')
 	with open(path, 'w') as out:
 		out.write(txt)
-	i+=1
+	j+=1
 	
-print "Done!",i,"files processed. BOM's and CR have been removed, so we have a set of Unicode files without BOM and with Unix-style line endings."
+print "Done!",j,"files processed. BOM's and CR have been removed, so we have a set of Unicode files without BOM and with Unix-style line endings."
