@@ -65,6 +65,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
     language = {}
     pubtype = {}
     journal = {}
+    journal2={}
     pubdate_day = {}
     pubdate_month = {}
     pubdate_year = {}
@@ -97,6 +98,11 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                 if matchObj:
                     artikel += 1
                     tekst[artikel] = ""
+                    while True:
+                        nextline=f.next()
+                        if nextline.strip()!="":
+                            journal2[artikel]=nextline.strip()
+                            break
                     continue
                 if line.startswith("BYLINE"):
                     byline[artikel] = line.replace("BYLINE: ", "").rstrip("\n")
@@ -128,10 +134,11 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                     tekst[artikel] = tekst[artikel] + " " + line.rstrip("\n")
     print "Done!", artikel, "articles added."
 
-    if not len(journal) == len(loaddate) == len(section) == len(language) == len(byline) == len(length) == len(tekst) == len(pubdate_year) == len(pubdate_dayofweek) ==len(pubdate_day) ==len(pubdate_month):
+    if not len(journal) == len(journal2) == len(loaddate) == len(section) == len(language) == len(byline) == len(length) == len(tekst) == len(pubdate_year) == len(pubdate_dayofweek) ==len(pubdate_day) ==len(pubdate_month):
         print "!!!!!!!!!!!!!!!!!!!!!!!!!"
         print "Ooooops! Not all articles seem to have data for each field. These are the numbers of fields that where correctly coded (and, of course, they should be equal to the number of articles, which they aren't in all cases."
         print "journal", len(journal)
+        print "journal2", len(journal2)
         print "loaddate", len(loaddate)
         print "pubdate_day",len(pubdate_day)
         print "pubdate_month",len(pubdate_month)
@@ -156,6 +163,11 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
             art_source = journal[i + 1]
         except:
             art_source = "NA"
+        try:
+            art_source2 = journal2[i + 1]
+        except:
+            art_source2 = "NA"
+
         try:
             art_loaddate = loaddate[i + 1]
         except:
@@ -216,8 +228,8 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
         art_suspicious = jj > .16 * ii
         if art_suspicious: suspicious+=1
 
-        art = {"source": art_source.lower(), "loaddate": art_loaddate, "pubdate_day":art_pubdate_day, "pubdate_month":art_pubdate_month, "pubdate_year":art_pubdate_year, "pubdate_dayofweek":art_pubdate_dayofweek, "section": art_section.lower(),
-               "language": art_language.lower(), "length": art_length, "text": art_text, "byline": art_byline,
+        art = {"source": art_source.lower(), 'source2': art_source2.lower(), "loaddate": art_loaddate, "pubdate_day":art_pubdate_day, "pubdate_month":art_pubdate_month, "pubdate_year":art_pubdate_year, "pubdate_dayofweek":art_pubdate_dayofweek, "section": art_section.lower(),
+               "language": art_language.lower(), 'length': art_length, "text": art_text, "byline": art_byline,
                "from-database": "lexisnexis", "suspicious":art_suspicious,"polarity":art_polarity,"subjectivity":art_subjectivity}
         article_id = collection.insert(art)
     print '\nInserted',len(tekst),"articles, out of which",suspicious,"might not be real articles, but, e.g., lists of stock shares. "
