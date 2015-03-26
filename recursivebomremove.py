@@ -17,7 +17,7 @@ mypath = sys.argv[1]
 alleinputbestanden=[]
 for path, subFolders, files in walk(mypath):
 	for f in files:
-		if isfile(join(path,f)) and splitext(f)[1].lower()==".txt":
+		if isfile(join(path,f)) and splitext(f)[1].lower()==".txt" or splitext(f)[1].lower()==".csv":
 			alleinputbestanden.append(join(path,f))
 
 j=0
