@@ -411,6 +411,8 @@ def main():
     group.add_argument("--overview", help="Give an overview of the data stored in the collection", action="store_true")
     group.add_argument("--overview_cleaned", help="Give an overview of the data stored in the cleaned collection",
                        action="store_true")
+    group.add_argument("--overview_cleanednjr", help="Give an overview of the data stored in the cleaned collection of nouns, adjectives, and adverbs",
+                       action="store_true")
     group.add_argument("--insert_ln",
                        help="Inserts LexisNexis articles. Name the folder with the input data after --insert_ln", )
     group.add_argument("--clean",
@@ -452,6 +454,12 @@ def main():
         overview1 = collectioncleaned.aggregate([{"$group": {"_id": "$source", "number": {"$sum": 1}}}])
         for combi in overview1["result"]:
             print combi["_id"], "\t", combi["number"]
+
+    if args.overview_cleanednjr:
+        overview1 = collectioncleanedNJR.aggregate([{"$group": {"_id": "$source", "number": {"$sum": 1}}}])
+        for combi in overview1["result"]:
+            print combi["_id"], "\t", combi["number"]
+
 
     if args.insert_ln:
         print "Starting to insert", args.insert_ln
