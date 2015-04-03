@@ -37,7 +37,7 @@ compscoreoutputfile=config.get('files','compscoreoutput')
 clusteroutputfile=config.get('files','clusteroutput')
 ldaoutputfile=config.get('files','ldaoutput')
 databasename=config.get('mongodb','databasename')
-collectionname=config.get('mongodb','collectionname')
+collectionname=config.get('mongodb'LDA,'collectionname')
 collectionnamecleaned=config.get('mongodb','collectionnamecleaned')
 collectionnamecleanedNJR = config.get('mongodb','collectionnamecleanedNJR')
 username=config.get('mongodb','username')
@@ -396,6 +396,14 @@ def lda(minfreq,file,ntopics,):
         allowedwords=set(line.strip().lower() for line in open(file,mode="r",encoding="utf-8"))
         # unicode() is neccessary to convert ngram-tuples to strings
         texts =[[unicode(word) for word in text if word in allowedwords] for text in texts]
+
+
+    # TODO NU WORDEN DE EXTRA TERMS (indien gedefinieerd) NIET meegenomen om de topics te bepalen
+    # TODO hier moet een keuzemogelijkheid komen; ook moeten we kijken of dit ueberhaupt zinvol is
+
+    if not extraterms==[]:
+        texts = [" ".join([w for w in t.split() if w not in set(extraterms)]) for t in texts]
+
 
     # Create Dictionary.
     id2word = corpora.Dictionary(texts)

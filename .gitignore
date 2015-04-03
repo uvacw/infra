@@ -64,4 +64,7 @@ output/
 
 # geen emacs-backupbestanden committen
 *~
+\#*
 
+# geen MacOS-bullshit
+.DS_Store
