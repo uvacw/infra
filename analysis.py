@@ -342,6 +342,8 @@ def lda(minfreq,file,ntopics,):
     foroutput_alltermscounts=[]
 
     foroutput_source=[]
+    foroutput_source2=[]
+    #TODO ook bij andere methodes source2 opslaan, niet alleen in LDA module
     foroutput_firstwords=[]
     foroutput_id=[]
     foroutput_byline = []
@@ -357,6 +359,7 @@ def lda(minfreq,file,ntopics,):
     for item in all:
         foroutput_firstwords.append(item["text"][:20])
         foroutput_source.append(item["source"])
+        foroutput_source2.append(item["source2"])
         foroutput_id.append(item["_id"])
         foroutput_byline.append(item["byline"])
         foroutput_section.append(item["section"])
@@ -402,7 +405,7 @@ def lda(minfreq,file,ntopics,):
     # TODO hier moet een keuzemogelijkheid komen; ook moeten we kijken of dit ueberhaupt zinvol is
 
     if not extraterms==[]:
-        texts = [" ".join([w for w in t.split() if w not in set(extraterms)]) for t in texts]
+        texts = [[" ".join([w for w in t.split() if w not in set(extraterms)]) for t in tt] for tt in texts]
 
 
     # Create Dictionary.
@@ -414,7 +417,7 @@ def lda(minfreq,file,ntopics,):
     # lda = models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=ntopics, update_every=1, chunksize=10000, passes=1)
     lda = models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=ntopics, alpha="auto")
     # Prints the topics.
-    for top in lda.print_topics(num_topics=ntopics, num_words=20):
+    for top in lda.print_topics(num_topics=ntopics, num_words=5):
         print "\n",top
 
 
@@ -428,14 +431,14 @@ def lda(minfreq,file,ntopics,):
         topiclabels=""
         for j in range(ntopics):
             topiclabels+=("\tTopic"+str(j+1))
-        fo.write('id\t'+'source\t'+'firstwords\t'+'byline\t'+'section\t'+'length\t'+'language\t'+'polarity\tsubjectivity\t'+'pubdate_day\t'+'pubdate_month\t'+'pubdate_year\t'+'pubdate_dayofweek'+topiclabels+"\t"+foroutput_alltermslabels+"\n")
+        fo.write('id\t'+'source\t'+'source2\t'+'firstwords\t'+'byline\t'+'section\t'+'length\t'+'language\t'+'polarity\tsubjectivity\t'+'pubdate_day\t'+'pubdate_month\t'+'pubdate_year\t'+'pubdate_dayofweek'+topiclabels+"\t"+foroutput_alltermslabels+"\n")
         for row in scoresperdoc[0]:
             #print type(row)
             #regel=row.tolist()
             #print len(regel)
             #print type(regel)
             #print regel
-            fo.write(unicode(foroutput_id[i])+'\t'+foroutput_source[i]+'\t'+foroutput_firstwords[i]+'\t'+foroutput_byline[i]+'\t'+foroutput_section[i]+'\t'+foroutput_length[i]+'\t'+foroutput_language[i]+'\t'+foroutput_polarity[i]+'\t'+foroutput_subjectivity[i]+'\t'+foroutput_pubdate_day[i]+'\t'+foroutput_pubdate_month[i]+'\t'+foroutput_pubdate_year[i]+'\t'+foroutput_pubdate_dayofweek[i]+'\t')
+            fo.write(unicode(foroutput_id[i])+'\t'+foroutput_source[i]+'\t'+foroutput_source2[i]+'\t'+foroutput_firstwords[i]+'\t'+foroutput_byline[i]+'\t'+foroutput_section[i]+'\t'+foroutput_length[i]+'\t'+foroutput_language[i]+'\t'+foroutput_polarity[i]+'\t'+foroutput_subjectivity[i]+'\t'+foroutput_pubdate_day[i]+'\t'+foroutput_pubdate_month[i]+'\t'+foroutput_pubdate_year[i]+'\t'+foroutput_pubdate_dayofweek[i]+'\t')
 
             fo.write('\t'.join(["{:0.3f}".format(loading) for loading in row]))
             fo.write(foroutput_alltermscounts[i])
