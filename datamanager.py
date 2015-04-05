@@ -40,7 +40,10 @@ collectioncleaned = db[collectionnamecleaned]
 collectioncleanedNJR = db[collectionnamecleanedNJR]
 
 
-
+MAAND={"January":1, "januari": 1, "February":2, "februari":2,"March":3,"maart":3,
+"April":4, "april":4, "mei":5, "May":5, "June":6,"juni":6, "July":7, "juli":7,
+"augustus": 8, "August":8,"september":9,"September":9, "oktober":10,"October":10,
+"November":11,"november":11,"December":12,"december":12}
 
 # hier wordt de functie voor het vervangen van leestekens gedefinieerd. Ze worden ERUIT gehaald, niet vervangen door spaties, en dat is juist wat we willen: willem-alexander --> willemalexander
 tbl = dict.fromkeys(i for i in xrange(sys.maxunicode) if unicodedata.category(unichr(i)).startswith('P'))
@@ -95,6 +98,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                     continue
                 matchObj = re.match(r"\s+(\d+) of (\d+) DOCUMENTS", line)
                 matchObj2 = re.match(r"\s+(\d{1,2}) (januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december) (\d{4}) (maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)", line)
+                matchObj3 = re.match(r"\s+(January|February|March|April|May|June|July|August|September|October|November|December) (\d{1,2}), (\d{4})", line)
                 if matchObj:
                     artikel += 1
                     tekst[artikel] = ""
@@ -114,9 +118,14 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                     loaddate[artikel] = line.replace("LOAD-DATE: ", "").rstrip("\n")
                 elif matchObj2:
                     pubdate_day[artikel]=matchObj2.group(1)
-                    pubdate_month[artikel]=matchObj2.group(2)
+                    pubdate_month[artikel]=str(MAAND[matchObj2.group(2)])
                     pubdate_year[artikel]=matchObj2.group(3)
                     pubdate_dayofweek[artikel]=matchObj2.group(4)
+                elif matchObj3:
+                    pubdate_day[artikel]=matchObj3.group(2)
+                    pubdate_month[artikel]=str(MAAND[matchObj3.group(1)])
+                    pubdate_year[artikel]=matchObj3.group(3)
+                    pubdate_dayofweek=["NA"]
                 elif line.startswith("LANGUAGE"):
                     language[artikel] = line.replace("LANGUAGE: ", "").rstrip("\n")
                 elif line.startswith("PUBLICATION-TYPE"):
