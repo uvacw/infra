@@ -99,6 +99,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                 matchObj = re.match(r"\s+(\d+) of (\d+) DOCUMENTS", line)
                 matchObj2 = re.match(r"\s+(\d{1,2}) (januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december) (\d{4}) (maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)", line)
                 matchObj3 = re.match(r"\s+(January|February|March|April|May|June|July|August|September|October|November|December) (\d{1,2}), (\d{4})", line)
+                matchObj4 = re.match(r"\s+(\d{1,2}) (January|February|March|April|May|June|July|August|September|October|November|December) (\d{4}) (Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)", line)
                 if matchObj:
                     artikel += 1
                     tekst[artikel] = ""
@@ -117,6 +118,7 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                 elif line.startswith("LOAD-DATE"):
                     loaddate[artikel] = line.replace("LOAD-DATE: ", "").rstrip("\n")
                 elif matchObj2:
+                    # print matchObj2.string
                     pubdate_day[artikel]=matchObj2.group(1)
                     pubdate_month[artikel]=str(MAAND[matchObj2.group(2)])
                     pubdate_year[artikel]=matchObj2.group(3)
@@ -125,7 +127,12 @@ def insert_lexisnexis(pathwithlnfiles, recursive):
                     pubdate_day[artikel]=matchObj3.group(2)
                     pubdate_month[artikel]=str(MAAND[matchObj3.group(1)])
                     pubdate_year[artikel]=matchObj3.group(3)
-                    pubdate_dayofweek=["NA"]
+                    pubdate_dayofweek[artikel]="NA"
+                elif matchObj4:
+                    pubdate_day[artikel]=matchObj4.group(1)
+                    pubdate_month[artikel]=str(MAAND[matchObj4.group(2)])
+                    pubdate_year[artikel]=matchObj4.group(3)
+                    pubdate_dayofweek[artikel]=matchObj4.group(4)
                 elif line.startswith("LANGUAGE"):
                     language[artikel] = line.replace("LANGUAGE: ", "").rstrip("\n")
                 elif line.startswith("PUBLICATION-TYPE"):
