@@ -203,10 +203,9 @@ def coocnet(n,minedgeweight):
         uniquecombi = set(combinations(wordsfilterd,2))
         for a,b in uniquecombi:
             if (b,a) in cooc:
-                continue
-            else:
-                if a!=b:
-                    cooc[(a,b)]+=1
+                a, b = b,a
+            if a!=b:
+                cooc[(a,b)]+=1
 
 
     with open(networkoutputfile,mode="w",encoding="utf-8") as f:
