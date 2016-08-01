@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 TO DO INFRA
 
 
@@ -173,3 +174,15 @@ generally:
 ==========
 - write readme/manual
 - systematic aux tools (e.g., to convert LN to UTF8)
+=======
+# Requirements to go to alpha
+
+0. Settle on indexing schema
+1. Adapt existing scrapers to new format
+2. implement processing model
+3. design CLI
+4. implement CLI
+5. design analysis model
+...
+
+>>>>>>> 84859f8c135480d3c44faf92bee836261a2e57a0

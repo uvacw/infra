@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+<<<<<<< HEAD
   <component name="DaemonCodeAnalyzer">
     <disable_hints />
   </component>
@@ -7,6 +8,8 @@
     <option name="SKIP_IMPORT_STATEMENTS" value="false" />
   </component>
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" />
+=======
+>>>>>>> 84859f8c135480d3c44faf92bee836261a2e57a0
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
     <OptionsSetting value="true" id="Remove" />
@@ -17,6 +20,7 @@
     <ConfirmationsSetting value="0" id="Add" />
     <ConfirmationsSetting value="0" id="Remove" />
   </component>
+<<<<<<< HEAD
   <component name="ProjectModuleManager">
     <modules />
   </component>
@@ -27,4 +31,7 @@
   <component name="RunManager">
     <list size="0" />
   </component>
+=======
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 2.7.10 (/usr/bin/python)" project-jdk-type="Python SDK" />
+>>>>>>> 84859f8c135480d3c44faf92bee836261a2e57a0
 </project>
